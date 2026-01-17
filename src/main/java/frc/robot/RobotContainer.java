@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import dev.doglog.DogLog;
+import dev.doglog.DogLogOptions;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
@@ -28,6 +31,10 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    // Create DogLog
+    DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
+    DogLog.setPdh(new PowerDistribution());     // allows battery and pdp logging
+    DogLog.log("ExampleLog", "Hello world!");   // test log item
     // Configure the trigger bindings
     configureBindings();
   }
