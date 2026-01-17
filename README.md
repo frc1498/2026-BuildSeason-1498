@@ -5,8 +5,8 @@ Code for Team 1498's 2026 robot, Aurora Zwei.
 ## Planned Subsystems
 
 ### Drivetrain
-Using the CTRE swerve generator to create the swerve drive code. <br>
-Adding in PathPlanner functionality for autonomous routines, and driving to a set position during the TeleOp period.
+01/17/26 - CTRE Swerve Template generated.  The robot still needs to b driven on the ground to determine gains.
+01/17/26 - Added the PathPlanner base code into the drive subsystem.  Still need to add auton selection code, running the auton command in RobotContainer, and driving to a set position during TeleOp.
 
 ### Vision
 The Limelight will be used to supplement the pose estimate.
