@@ -9,7 +9,10 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import dev.doglog.DogLog;
+import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -19,6 +22,12 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
+/**
+* This class is where the bulk of the robot should be declared. Since Command-based is a
+* "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
+* periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+* subsystems, commands, and trigger mappings) should be declared here.
+*/
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
@@ -36,10 +45,25 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
+    /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
+        // Create DogLog
+        DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
+        DogLog.setPdh(new PowerDistribution());     // allows battery and pdp logging
+        DogLog.log("ExampleLog", "Hello world!");   // test log item
+        // Configure the trigger bindings
         configureBindings();
     }
 
+    /**
+    * Use this method to define your trigger->command mappings. Triggers can be created via the
+    * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
+    * predicate, or via the named factories in {@link
+    * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
+    * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
+    * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
+    * joysticks}.
+    */
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
@@ -77,6 +101,11 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
+    /**
+    * Use this to pass the autonomous command to the main {@link Robot} class.
+    *
+    * @return the command to run in autonomous
+    */
     public Command getAutonomousCommand() {
         // Simple drive forward auton
         final var idle = new SwerveRequest.Idle();
