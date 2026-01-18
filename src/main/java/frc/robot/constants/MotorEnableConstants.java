@@ -12,12 +12,17 @@ package frc.robot.constants;
  * <p>It is advised to statically import this class (or one of its inner classes) wherever the
  * constants are needed, to reduce verbosity.
  */
-public final class Constants {
+public final class MotorEnableConstants {
 //Motor Enable/Disable
 
   public static final boolean kIntakeMotorEnabled=true;
-
-//Controller Definitions
-
-
+  public static final boolean kHopperMotorEnabled=true;
+  public static final boolean kInnerClimbMotorEnabled=true;
+  public static final boolean kOuterClimbMotorEnabled=true;
+  public static final boolean kTurretMotorEnabled=true;
+  public static final boolean kShooter1MotorEnabled=true;
+  public static final boolean kShooter2MotorEnabled=true;
+  public static final boolean kSpindexerMotorEnabled=true;
+  public static final boolean kKickupMotorEnabled=true;
+  public static final boolean kHoodMotorEnabled=true;
 }

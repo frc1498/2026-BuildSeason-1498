@@ -16,6 +16,7 @@ public class IntakeConstants {
 
   //=====================Speeds=====================
   public static final int kIntakeSpeed = 0;
+  public static final int kStopSpeed = 0;
   public static final int kOuttakeSpeed = 0;
 
 }

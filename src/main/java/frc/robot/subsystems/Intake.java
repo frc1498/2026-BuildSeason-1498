@@ -5,13 +5,12 @@
 //This subsystem manages the run/stop of the intake rollers
 
 package frc.robot.subsystems;
-
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.config.IntakeConfig;
-import frc.robot.constants.Constants;
+import frc.robot.constants.MotorEnableConstants;
 import frc.robot.constants.IntakeConstants;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -51,22 +50,42 @@ public class Intake extends SubsystemBase {
   //====================================================
 
   private void intake(){
-
-    if (Constants.kIntakeMotorEnabled) {
+    if (MotorEnableConstants.kIntakeMotorEnabled) {
       intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kIntakeSpeed));
     }
-
+  }
+  
+  private void outtake(){
+    if (MotorEnableConstants.kIntakeMotorEnabled) {
+      intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kIntakeSpeed));
+    }
   }
 
+  private void stop(){
+    if (MotorEnableConstants.kIntakeMotorEnabled) {
+      intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kStopSpeed));
+    }
+  }
   //=====================================================
   //=============Public Methods==========================
   //=====================================================
+  
+  public Command IntakeSuck() {
+    return run(
+      () -> {this.intake();}
+    );
+  }
 
+  public Command IntakeSpit() {
+    return run(
+      () -> {this.outtake();}
+    );
+  }
 
-
-  public boolean exampleCondition() {
-    // Query some boolean state, such as a digital sensor.
-    return false;
+    public Command IntakeStop() {
+    return run(
+      () -> {this.stop();}
+    );
   }
 
   @Override

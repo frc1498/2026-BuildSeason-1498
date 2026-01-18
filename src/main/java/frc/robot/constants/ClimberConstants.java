@@ -14,20 +14,22 @@ package frc.robot.constants;
  */
 public class ClimberConstants {
   //=====================Positions=====================
-  public static final int kOuterMaxHeight = 0;
-  public static final int kOuterHandOffHeight = 0;
-  public static final int kOuterMinHeight = 0;
+  public static final int kOuterClimbExtend = 0;
+  public static final int kOuterClimbHandOff = 0;
+  public static final int kOuterClimbRetract = 0;
 
-  public static final int kInnerMaxHeight = 0;
-  public static final int kInnerHandOffHeight = 0;
-  public static final int kInnerMinHeight = 0;
+  public static final int kInnerClimbExtend = 0;
+  public static final int kInnerClimbHandOff = 0;
+  public static final int kInnerClimbRetract = 0;
+
+  public static final int kDeadband = 0;
 
   //=====================Safeties======================
-  public static final int kOuterSafeMaxHeight = 0;
-  public static final int kOuterSafeMinHeight = 0;
+  public static final int kOuterClimbSafeExtend = 0;
+  public static final int kOuterInnerClimbSafeRetract = 0;
 
-  public static final int kInnerSafeMaxHeight = 0;
-  public static final int kInnerSafeMinHeight = 0;
+  public static final int kInnerClimbSafeExtend = 0;
+  public static final int kInnerClimbSafeRetract = 0;
 
   //======================Sim Values===================
 

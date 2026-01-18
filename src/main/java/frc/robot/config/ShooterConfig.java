@@ -7,8 +7,8 @@ import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
 public class ShooterConfig {
     //Constants go Here
-    public static final int kShooterMotor1CANID=0;
-    public static final int kShooterMotor2CANID=0;
+    public static final int kShooter1MotorCANID=0;
+    public static final int kShooter2MotorCANID=0;
     public static final int kHoodMotorCANID=0;
     public static final int kTurretMotorCANID=0;
     public static final int kSpindexerMotorCANID=0;
@@ -16,8 +16,8 @@ public class ShooterConfig {
    
     //Variables
     public TalonFXConfiguration hoodMotorConfig; //x44 motor
-    public TalonFXConfiguration shooterMotor1Config; //kraken motor (x60)
-    public TalonFXConfiguration shooterMotor2Config; //kraken motor (x60)
+    public TalonFXConfiguration shooter1MotorConfig; //kraken motor (x60)
+    public TalonFXConfiguration shooter2MotorConfig; //kraken motor (x60)
     public TalonFXConfiguration turretMotorConfig; //x44 motor
     public TalonFXConfiguration spindexerMotorConfig; //kraken motor (x60)
     public TalonFXConfiguration kickupMotorConfig; //kraken motor (x60)
@@ -27,11 +27,11 @@ public class ShooterConfig {
         hoodMotorConfig = new TalonFXConfiguration(); //Instantiate - make a framework
         this.configureHoodMotor(hoodMotorConfig); //Fill in framework, requires a method below
 
-        shooterMotor1Config = new TalonFXConfiguration(); //Instantiate - make a framework
-        this.configureShooterMotor1(shooterMotor1Config); //Fill in framework, requires a method below
+        shooter1MotorConfig = new TalonFXConfiguration(); //Instantiate - make a framework
+        this.configureShooterMotor1(shooter1MotorConfig); //Fill in framework, requires a method below
 
-        shooterMotor2Config = new TalonFXConfiguration(); //Instantiate - make a framework
-        this.configureShooterMotor2(shooterMotor2Config); //Fill in framework, requires a method below
+        shooter2MotorConfig = new TalonFXConfiguration(); //Instantiate - make a framework
+        this.configureShooterMotor2(shooter2MotorConfig); //Fill in framework, requires a method below
 
         turretMotorConfig = new TalonFXConfiguration(); //Instantiate - make a framework
         this.configureTurretMotor(turretMotorConfig); //Fill in framework, requires a method below

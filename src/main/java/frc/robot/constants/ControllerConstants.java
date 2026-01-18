@@ -12,25 +12,10 @@ package frc.robot.constants;
  * <p>It is advised to statically import this class (or one of its inner classes) wherever the
  * constants are needed, to reduce verbosity.
  */
-public class ShooterConstants {
+public class ControllerConstants {
 
-  //==============Positions=================
-
-  //===============Speeds===================
-  public static final int kKickUpIntake=0;
-  public static final int kKickUpOuttake=0;
-
-  //===============Safeties==================
-  public static final int kHoodSafeExtend = 0;
-  public static final int kHoodSafeRetract = 0;
-  
-  public static final int kTurretSafeClockwise = 0;
-  public static final int kTurretSafeCounterClockwise = 0;
-
-  public static final int kShooterMaxSpeed = 0;
-  public static final int kShooterMinSpeed = 0;
-
-  public static final int kKickupMaxSpeed = 0;
-  public static final int kKickupMinSpeed = 0;
+ //=======================Constants================================
+  public static final int kDriverControllerPort = 0;
+  public static final int kOperatorControllerPort = 0;
 
 }
