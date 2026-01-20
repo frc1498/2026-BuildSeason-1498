@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import frc.robot.commands.Autos;
-import frc.robot.commands.ExampleCommand;
 import frc.robot.constants.ControllerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Hopper;
