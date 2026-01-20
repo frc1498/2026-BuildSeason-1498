@@ -4,6 +4,18 @@
 
 package frc.robot;
 
+import frc.robot.commands.Autos;
+import frc.robot.commands.ExampleCommand;
+import frc.robot.constants.ControllerConstants;
+import frc.robot.subsystems.Climber;
+import frc.robot.subsystems.Hopper;
+import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Shooter;
+import frc.robot.config.ClimberConfig;
+import frc.robot.config.HopperConfig;
+import frc.robot.config.IntakeConfig;
+import frc.robot.config.ShooterConfig;
+
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -13,6 +25,7 @@ import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.PowerDistribution;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -29,6 +42,28 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 * subsystems, commands, and trigger mappings) should be declared here.
 */
 public class RobotContainer {
+  // The robot's subsystems and commands are defined here...
+
+  //=======================================================================
+  //=======================Assign Subsystem Names==========================
+  //======================================================================= 
+  public final ClimberConfig climberConfig = new ClimberConfig();
+  public Climber climber = new Climber(climberConfig);
+
+  public HopperConfig hopperConfig = new HopperConfig();
+  public Hopper hopper = new Hopper(hopperConfig);
+
+  public IntakeConfig intakeConfig = new IntakeConfig();
+  public Intake intake = new Intake(intakeConfig);
+
+  public ShooterConfig shooterConfig = new ShooterConfig();
+  public Shooter shooter = new Shooter(shooterConfig);
+
+    //Gamepad assignment
+    //Instantiate 
+    private final CommandXboxController driver = new CommandXboxController(ControllerConstants.kDriverControllerPort);
+    private final CommandXboxController operator = new CommandXboxController(ControllerConstants.kOperatorControllerPort);
+
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
@@ -40,8 +75,6 @@ public class RobotContainer {
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
-
-    private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -70,9 +103,9 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-driver.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-driver.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-driver.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -83,22 +116,114 @@ public class RobotContainer {
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
 
-        joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        joystick.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
+        driver.a().whileTrue(drivetrain.applyRequest(() -> brake));
+        driver.b().whileTrue(drivetrain.applyRequest(() ->
+            point.withModuleDirection(new Rotation2d(-driver.getLeftY(), -driver.getLeftX()))
         ));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        driver.back().and(driver.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        driver.back().and(driver.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        driver.start().and(driver.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        driver.start().and(driver.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // Reset the field-centric heading on left bumper press.
-        joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        driver.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+      
+        //===================================================
+        //===================Driver Commands=================
+        //===================================================
+
+        //Driver POV Up
+        //driver.povUp().
+
+        //Driver POV Down
+        //driver.povDown().
+
+        //Driver POV Left
+        //driver.povLeft().
+
+        //Driver POV Right
+        //driver.povRight().
+
+        //Driver X button
+        //driver.x().
+
+        //Driver Y button
+        //driver.y().
+
+        //Driver A button
+        //driver.a().
+
+        //Driver B button
+        //driver.b().
+
+        //Driver RTrigger
+        //driver.rightTrigger(0.1).
+
+        //Driver RBumper 
+        //driver.rightBumper().
+
+        //Driver LTrigger
+        //driver.leftTrigger(0.1).
+
+        //Driver LBumper
+        //driver.leftBumper().
+
+        //Driver Select
+        //driver.
+
+        //Driver Start
+        //driver.start().
+
+        //===================================================
+        //==================Operator Commands================
+        //===================================================
+
+        //Operator POV Up
+        //operator.povUp()
+
+        //Operator POV Down
+        //operator.povDown()
+
+        //Operator POV Left
+        //operator.povLeft()
+
+        //Operator POV Right
+        //operator.povRight()
+
+        //Operator X button
+        //operator.X()
+
+        //Operator Y button
+        //operator.y()
+
+        //Operator A button
+        //operator.a()
+
+        //Operator B button
+        //operator.b()
+
+        //Operator RTrigger
+        //operator.rightTrigger(0.1)
+
+        //Operator RBumper 
+        //operator.rightBumper()
+
+        //Operator LTrigger
+        //operator.leftTrigger(0.1)
+
+        //Operator LBumper
+        //operator.leftBumper()
+
+        //Operator Select
+        //operator.
+
+        //Operator Start
+        //operator.START().
     }
 
     /**
