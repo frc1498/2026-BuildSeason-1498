@@ -2,11 +2,15 @@ package frc.robot.subsystems;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.LimelightHelpers;
@@ -18,6 +22,7 @@ public class Vision extends SubsystemBase {
     public LimelightHelpers.PoseEstimate megaTag2 = new PoseEstimate();
     public Supplier<Pigeon2> drivetrainState;
     public CommandSwerveDrivetrain drivetrain;
+    public Field2d limelightField = new Field2d();
     
     private LimelightHelpers.PoseEstimate cachedMegaTag2 = new PoseEstimate();
     private double cachedRobotHeading = 0.0;
@@ -26,6 +31,7 @@ public class Vision extends SubsystemBase {
     private boolean cachedAreTagsSeen = false;
     private boolean cachedIsRobotSlowEnough = false;
     private boolean cachedIsPoseValid = false;
+    private double limelightTimestamp;
 
     /**
      * Constructor.
@@ -39,6 +45,7 @@ public class Vision extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(VisionConstants.kLimelightName, this.getRobotHeading(), 0.0, 0.0, 0.0, 0.0, 0.0);
 
         SmartDashboard.putData("Vision", this);
+        SmartDashboard.putData("Vision/Pose", this.limelightField);
     }
 
     /**
@@ -146,6 +153,29 @@ public class Vision extends SubsystemBase {
 
     public Trigger addLimelightPose = new Trigger(() -> {return this.cachedIsPoseValid;});
 
+    /**
+     * Add the current megaTag2 pose estimate to the drivetrain pose estimate.
+     * @param drivetrain
+     * @return
+     */
+    public Command addMegaTag2(Supplier<CommandSwerveDrivetrain> drivetrain) {
+        return run(
+            () -> {
+                limelightTimestamp = Utils.getCurrentTimeSeconds();
+                drivetrain.get().setVisionMeasurementStdDevs(VecBuilder.fill(0.5, 0.5, 9999999));
+                drivetrain.get().addVisionMeasurement(megaTag2.pose, megaTag2.timestampSeconds);
+            }
+        ).withName("Adding Limelight Vision Measurement").ignoringDisable(true);
+    }
+
+    /**
+     * Switch the limelight to use its internal IMU for the pose estimate.
+     * @return
+     */
+    public Command switchToInternalIMU() {
+        return runOnce(() -> {this.setLimelightToInternalIMU();}).withName("Setting Limelight to IMU Mode 2").ignoringDisable(true);
+    }
+
     @Override
     public void initSendable(SendableBuilder builder) {
         builder.addStringProperty("Command", this::getCurrentCommandName, null);
@@ -168,12 +198,16 @@ public class Vision extends SubsystemBase {
         this.cachedIsRobotSlowEnough = this.isRobotSlowEnough(cachedRobotRotationRate);
         this.cachedIsPoseValid = this.isPoseValid();
 
+        //Only update the megaTag if the most recent megaTag is valid.
         if (this.cachedMegaTagValid) {
             this.megaTag2 = this.cachedMegaTag2;
         }
 
         //Every loop, seed the limelight IMU with the current robot heading.
         LimelightHelpers.SetRobotOrientation(VisionConstants.kLimelightName, this.cachedRobotHeading, 0.0, 0.0, 0.0, 0.0, 0.0);
+
+        //Every loop, update the odometry with the current pose estimated by the limelight.
+        limelightField.setRobotPose(this.getCurrentPose());
     }
 
     @Override
