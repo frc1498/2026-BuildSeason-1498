@@ -1,12 +1,23 @@
 package frc.robot.subsystems;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
+
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -16,13 +27,24 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.constants.VisionConstants.limelight;
+import frc.robot.constants.VisionConstants.photonvision;
 
 public class Vision extends SubsystemBase {
     
-    public LimelightHelpers.PoseEstimate megaTag2 = new PoseEstimate();
     public Supplier<Pigeon2> drivetrainState;
     public CommandSwerveDrivetrain drivetrain;
+
+    public LimelightHelpers.PoseEstimate megaTag2 = new PoseEstimate();
+
     public Field2d limelightField = new Field2d();
+
+    public Matrix<N3, N1> currentStdDevs = limelight.kMegaTag2StdDevs;
+
+    private PhotonCamera leftCamera;
+    private PhotonPoseEstimator leftCameraEstimator = new PhotonPoseEstimator(photonvision.kTagLayout, photonvision.kRobotToLeftCamera);
+
+    private PhotonCamera rightCamera;
+    private PhotonPoseEstimator rightCameraEstimator = new PhotonPoseEstimator(photonvision.kTagLayout, photonvision.kRobotToRightCamera);
     
     private LimelightHelpers.PoseEstimate cachedMegaTag2 = new PoseEstimate();
     private double cachedRobotHeading = 0.0;
@@ -30,7 +52,9 @@ public class Vision extends SubsystemBase {
     private boolean cachedMegaTagValid = false;
     private boolean cachedAreTagsSeen = false;
     private boolean cachedIsRobotSlowEnough = false;
-    private boolean cachedIsPoseValid = false;
+    private boolean cachedIsLimelightPoseValid = false;
+    private boolean cachedIsLeftPhotonPoseValid = false;
+    private boolean cachedIsRightPhotonPoseValid = false;
     private double limelightTimestamp;
 
     /**
@@ -41,8 +65,11 @@ public class Vision extends SubsystemBase {
 
         this.setLimelightRobotPosition();
         //In the constructor, set the IMU mode to 1, so the limelight IMU is seeded with the robot gyro heading.
-        LimelightHelpers.SetIMUMode(limelight.kLimelightName, 1);
-        LimelightHelpers.SetRobotOrientation(limelight.kLimelightName, this.getRobotHeading(), 0.0, 0.0, 0.0, 0.0, 0.0);
+        LimelightHelpers.SetIMUMode(limelight.kName, 1);
+        LimelightHelpers.SetRobotOrientation(limelight.kName, this.getRobotHeading(), 0.0, 0.0, 0.0, 0.0, 0.0);
+
+        leftCamera = new PhotonCamera(photonvision.kLeftName);
+        rightCamera = new PhotonCamera(photonvision.kRightName);
 
         SmartDashboard.putData("Vision", this);
         SmartDashboard.putData("Vision/Pose", this.limelightField);
@@ -54,13 +81,13 @@ public class Vision extends SubsystemBase {
      */
     private void setLimelightRobotPosition() {
         LimelightHelpers.setCameraPose_RobotSpace(
-            limelight.kLimelightName,
-            limelight.kLimelightForwardOffset,
-            limelight.kLimelightSideOffset,
-            limelight.kLimelightUpOffset,
-            limelight.kLimelightRollOffset,
-            limelight.kLimelightPitchOffset,
-            limelight.kLimelightYawOffset
+            limelight.kName,
+            limelight.kForwardOffset,
+            limelight.kSideOffset,
+            limelight.kUpOffset,
+            limelight.kRollOffset,
+            limelight.kPitchOffset,
+            limelight.kYawOffset
         );
     }
 
@@ -68,7 +95,7 @@ public class Vision extends SubsystemBase {
      * Command the limelight to start using its internal IMU for the pose estimate it produces.
      */
     private void setLimelightToInternalIMU() {
-        LimelightHelpers.SetIMUMode(limelight.kLimelightName, 2);
+        LimelightHelpers.SetIMUMode(limelight.kName, 2);
     }
 
     /**
@@ -78,16 +105,38 @@ public class Vision extends SubsystemBase {
      * @return
      */
     private boolean isMegaTagValid(LimelightHelpers.PoseEstimate poseEstimate) {
-        return (poseEstimate != null) && LimelightHelpers.getTV(limelight.kLimelightName);
+        return (poseEstimate != null) && LimelightHelpers.getTV(limelight.kName);
+    }
+
+    /**
+     * Returns true if the photonvision pose estimate is not empty.
+     * This method is not checking if the data makes sense.
+     * @param camera
+     * @param result
+     * @return
+     */
+    private boolean isPhotonEstimateValid(PhotonPoseEstimator camera, PhotonPipelineResult result) {
+        return camera.estimateCoprocMultiTagPose(result).isEmpty();
     }
 
     /**
      * Returns true if the latest megaTag estimate identifies at least the amount of tags passed into this method.
+     * @param megaTag2Estimate
      * @param tagCount
      * @return
      */
-    private boolean areTagsSeen(int tagCount) {
-        return this.megaTag2.tagCount >= tagCount;
+    private boolean areLimelightTagsSeen(LimelightHelpers.PoseEstimate megaTag2Estimate, int tagCount) {
+        return megaTag2Estimate.tagCount >= tagCount;
+    }
+
+    /**
+     * Returns true if the photonvision result contains at least the amount of tags passed into this method.
+     * @param photonResult
+     * @param tagCount
+     * @return
+     */
+    private boolean arePhotonTagsSeen(PhotonPipelineResult photonResult, int tagCount) {
+        return photonResult.hasTargets() && (photonResult.getTargets().size() >= tagCount);
     }
 
     /**
@@ -104,11 +153,26 @@ public class Vision extends SubsystemBase {
      * 1. The megaTag2 estimate is valid.
      * 2. At least one AprilTag was seen.
      * 3. The robot is not turning too fast.
+     * @param megaTag2Estimate
      * @return
      */
-    private boolean isPoseValid() {
+    private boolean isLimelightPoseValid(LimelightHelpers.PoseEstimate megaTag2Estimate) {
         //3.3 radians per second is currently 75% of our maximum rotational speed.
-        return this.isMegaTagValid(this.megaTag2) && this.areTagsSeen(1) && this.isRobotSlowEnough(3.3);
+        return this.isMegaTagValid(megaTag2Estimate) && this.areLimelightTagsSeen(megaTag2Estimate, 1) && this.isRobotSlowEnough(3.3);
+    }
+
+    /**
+     * Signifies that the latest estimated photon pose is valid if:
+     * 1. The photon pose estimate is valid.
+     * 2. At least one AprilTag was seen.
+     * 3. The robot is not turning too fast.
+     * @param camera
+     * @param result
+     * @return
+     */
+    private boolean isPhotonvisionPoseValid(PhotonPoseEstimator camera, PhotonPipelineResult result) {
+        //3.3 radian per second is currently 75% of our maximum rotational speed.
+        return this.isPhotonEstimateValid(camera, result) && this.arePhotonTagsSeen(result, 1) && this.isRobotSlowEnough(3.3);
     }
 
     /**
@@ -131,8 +195,66 @@ public class Vision extends SubsystemBase {
      * Return the pose component of the current megaTag2 estimate.
      * @return
      */
-    private Pose2d getCurrentPose() {
+    private Pose2d getCurrentLimelightPose() {
         return this.megaTag2.pose;
+    }
+
+    /**
+     * Return the pose component of the current left swerve camera estimate.
+     * @param camera
+     * @return
+     */
+    private Pose2d getCurrentLeftPhotonPose(PhotonPoseEstimator camera) {
+        return this.megaTag2.pose;
+    }
+
+    /**
+     * Calculates new standard deviations. This algorithm is a heuristic that creates dynamic standard deviations based on number of tags, estimation strategy, and distance from the tags.
+     * @param camera
+     * @param estimatedPose The estimated pose to guess the standard deviations for.
+     * @param targets All targets in this camera frame.
+     */
+    private void updateEstimationStdDevs(PhotonPoseEstimator camera, Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets) {
+        if (estimatedPose.isEmpty()) {
+            // No pose input. Default to single-tag std devs
+            this.currentStdDevs = photonvision.kSingleTagStdDevs;
+        } else {
+            // Pose present. Start running Heuristic
+            var estStdDevs = photonvision.kSingleTagStdDevs;
+            int numTags = 0;
+            double avgDist = 0;
+
+            // Precalculation - See how many tags we found, and calculate an average-distance metric
+            for (var tgt : targets) {
+                var tagPose = camera.getFieldTags().getTagPose(tgt.getFiducialId());
+                if (tagPose.isEmpty()) continue;
+                numTags++;
+                avgDist += tagPose.get().toPose2d().getTranslation().getDistance(estimatedPose.get().estimatedPose.toPose2d().getTranslation());
+            }
+
+            if (numTags == 0) {
+                // No tags visible. Default to single-tag std devs
+                this.currentStdDevs = photonvision.kSingleTagStdDevs;
+            } else {
+                // One or more tags visible, run the full heuristic.
+                avgDist /= numTags;
+                // Decrease std devs if multiple targets are visible
+                if (numTags > 1) estStdDevs = photonvision.kMultiTagStdDevs;
+                // Increase std devs based on (average) distance
+                if (numTags == 1 && avgDist > 4)
+                    estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+                else estStdDevs.times(1 + (avgDist * avgDist / 30));
+                this.currentStdDevs = estStdDevs;
+            }
+        }
+    }
+
+    /**
+     * Returns the latest standard deviations of the estimated pose from {@link #getEstimatedGlobalPose()}, for use with {@link edu.wpi.first.math.estimator.SwerveDrivePoseEstimator SwerveDrivePoseEstimator}. This should only be used when there are targets visible.
+     * @return
+     */
+    public Matrix<N3, N1> getEstimationStdDevs() {
+        return this.currentStdDevs;
     }
 
     /**
@@ -151,7 +273,9 @@ public class Vision extends SubsystemBase {
         // return (this.getCurrentCommand == null) ? "No Command" : this.getCurrentCommand().getName();
     }
 
-    public Trigger addLimelightPose = new Trigger(() -> {return this.cachedIsPoseValid;});
+    public Trigger addLimelightPose = new Trigger(() -> {return this.cachedIsLimelightPoseValid;});
+    public Trigger addLeftPhotonPose = new Trigger(() -> {return this.cachedIsLeftPhotonPoseValid;});
+    public Trigger addRightPhotonPose = new Trigger(() -> {return this.cachedIsRightPhotonPoseValid;});
 
     /**
      * Add the current megaTag2 pose estimate to the drivetrain pose estimate.
@@ -192,11 +316,11 @@ public class Vision extends SubsystemBase {
         // By caching these values, any other code that requires them will use the same values for the current 20 ms loop.
         this.cachedRobotHeading = this.getRobotHeading();
         this.cachedRobotRotationRate = this.getRobotRotationRate();
-        this.cachedMegaTag2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelight.kLimelightName);
+        this.cachedMegaTag2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelight.kName);
         this.cachedMegaTagValid = this.isMegaTagValid(this.cachedMegaTag2);
-        this.cachedAreTagsSeen = this.areTagsSeen(1);
+        this.cachedAreTagsSeen = this.areLimelightTagsSeen(this.cachedMegaTag2, 1);
         this.cachedIsRobotSlowEnough = this.isRobotSlowEnough(cachedRobotRotationRate);
-        this.cachedIsPoseValid = this.isPoseValid();
+        this.cachedIsLimelightPoseValid = this.isLimelightPoseValid(this.cachedMegaTag2);
 
         //Only update the megaTag if the most recent megaTag is valid.
         if (this.cachedMegaTagValid) {
@@ -204,14 +328,30 @@ public class Vision extends SubsystemBase {
         }
 
         //Every loop, seed the limelight IMU with the current robot heading.
-        LimelightHelpers.SetRobotOrientation(limelight.kLimelightName, this.cachedRobotHeading, 0.0, 0.0, 0.0, 0.0, 0.0);
+        LimelightHelpers.SetRobotOrientation(limelight.kName, this.cachedRobotHeading, 0.0, 0.0, 0.0, 0.0, 0.0);
 
         //Every loop, update the odometry with the current pose estimated by the limelight.
-        limelightField.setRobotPose(this.getCurrentPose());
+        limelightField.setRobotPose(this.getCurrentLimelightPose());
+
+        Optional<EstimatedRobotPose> visionEst = Optional.empty();
+        for (var result : leftCamera.getAllUnreadResults()) {
+            visionEst = leftCameraEstimator.estimateCoprocMultiTagPose(result);
+            if (visionEst.isEmpty()) {
+                visionEst = leftCameraEstimator.estimateLowestAmbiguityPose(result);
+            }
+            this.updateEstimationStdDevs(leftCameraEstimator, visionEst, result.getTargets());
+
+            this.drivetrain.addVisionMeasurement(visionEst.get().estimatedPose.toPose2d(), visionEst.get().timestampSeconds, this.getEstimationStdDevs());
+        }
     }
 
     @Override
     public void simulationPeriodic() {
         // This method will be called once per scheduler run during simulation.
+    }
+
+    @FunctionalInterface
+    public static interface poseEstimateConsumer {
+        public void accept(Pose2d pose, double timestamp, Matrix<N3, N1> measurementStdDevs);
     }
 }
