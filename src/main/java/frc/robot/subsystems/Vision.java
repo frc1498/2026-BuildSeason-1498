@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseEstimate;
-import frc.robot.constants.VisionConstants;
+import frc.robot.constants.VisionConstants.limelight;
 
 public class Vision extends SubsystemBase {
     
@@ -41,8 +41,8 @@ public class Vision extends SubsystemBase {
 
         this.setLimelightRobotPosition();
         //In the constructor, set the IMU mode to 1, so the limelight IMU is seeded with the robot gyro heading.
-        LimelightHelpers.SetIMUMode(VisionConstants.kLimelightName, 1);
-        LimelightHelpers.SetRobotOrientation(VisionConstants.kLimelightName, this.getRobotHeading(), 0.0, 0.0, 0.0, 0.0, 0.0);
+        LimelightHelpers.SetIMUMode(limelight.kLimelightName, 1);
+        LimelightHelpers.SetRobotOrientation(limelight.kLimelightName, this.getRobotHeading(), 0.0, 0.0, 0.0, 0.0, 0.0);
 
         SmartDashboard.putData("Vision", this);
         SmartDashboard.putData("Vision/Pose", this.limelightField);
@@ -54,13 +54,13 @@ public class Vision extends SubsystemBase {
      */
     private void setLimelightRobotPosition() {
         LimelightHelpers.setCameraPose_RobotSpace(
-            VisionConstants.kLimelightName,
-            VisionConstants.kLimelightForwardOffset,
-            VisionConstants.kLimelightSideOffset,
-            VisionConstants.kLimelightUpOffset,
-            VisionConstants.kLimelightRollOffset,
-            VisionConstants.kLimelightPitchOffset,
-            VisionConstants.kLimelightYawOffset
+            limelight.kLimelightName,
+            limelight.kLimelightForwardOffset,
+            limelight.kLimelightSideOffset,
+            limelight.kLimelightUpOffset,
+            limelight.kLimelightRollOffset,
+            limelight.kLimelightPitchOffset,
+            limelight.kLimelightYawOffset
         );
     }
 
@@ -68,7 +68,7 @@ public class Vision extends SubsystemBase {
      * Command the limelight to start using its internal IMU for the pose estimate it produces.
      */
     private void setLimelightToInternalIMU() {
-        LimelightHelpers.SetIMUMode(VisionConstants.kLimelightName, 2);
+        LimelightHelpers.SetIMUMode(limelight.kLimelightName, 2);
     }
 
     /**
@@ -78,7 +78,7 @@ public class Vision extends SubsystemBase {
      * @return
      */
     private boolean isMegaTagValid(LimelightHelpers.PoseEstimate poseEstimate) {
-        return (poseEstimate != null) && LimelightHelpers.getTV(VisionConstants.kLimelightName);
+        return (poseEstimate != null) && LimelightHelpers.getTV(limelight.kLimelightName);
     }
 
     /**
@@ -192,7 +192,7 @@ public class Vision extends SubsystemBase {
         // By caching these values, any other code that requires them will use the same values for the current 20 ms loop.
         this.cachedRobotHeading = this.getRobotHeading();
         this.cachedRobotRotationRate = this.getRobotRotationRate();
-        this.cachedMegaTag2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(VisionConstants.kLimelightName);
+        this.cachedMegaTag2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelight.kLimelightName);
         this.cachedMegaTagValid = this.isMegaTagValid(this.cachedMegaTag2);
         this.cachedAreTagsSeen = this.areTagsSeen(1);
         this.cachedIsRobotSlowEnough = this.isRobotSlowEnough(cachedRobotRotationRate);
@@ -204,7 +204,7 @@ public class Vision extends SubsystemBase {
         }
 
         //Every loop, seed the limelight IMU with the current robot heading.
-        LimelightHelpers.SetRobotOrientation(VisionConstants.kLimelightName, this.cachedRobotHeading, 0.0, 0.0, 0.0, 0.0, 0.0);
+        LimelightHelpers.SetRobotOrientation(limelight.kLimelightName, this.cachedRobotHeading, 0.0, 0.0, 0.0, 0.0, 0.0);
 
         //Every loop, update the odometry with the current pose estimated by the limelight.
         limelightField.setRobotPose(this.getCurrentPose());
