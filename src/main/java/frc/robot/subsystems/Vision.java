@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.photonvision.EstimatedRobotPose;
@@ -33,6 +34,7 @@ public class Vision extends SubsystemBase {
     
     public Supplier<Pigeon2> drivetrainState;
     public CommandSwerveDrivetrain drivetrain;
+    public poseEstimateConsumer poseConsumer;
 
     public LimelightHelpers.PoseEstimate megaTag2 = new PoseEstimate();
 
@@ -62,6 +64,8 @@ public class Vision extends SubsystemBase {
      */
     public Vision(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
+
+        this.poseConsumer = this.drivetrain::addVisionMeasurement;
 
         this.setLimelightRobotPosition();
         //In the constructor, set the IMU mode to 1, so the limelight IMU is seeded with the robot gyro heading.
