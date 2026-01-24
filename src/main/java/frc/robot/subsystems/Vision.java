@@ -382,7 +382,7 @@ public class Vision extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(limelight.kName, this.cachedRobotHeading, 0.0, 0.0, 0.0, 0.0, 0.0);
 
         // Every loop, update the odometry with the current pose estimated by the limelight.
-        // limelightField.setRobotPose(this.getCurrentLimelightPose());
+        limelightField.setRobotPose(this.getCurrentLimelightPose());
 
         /* This code is for the photonvision estimate.  Currently, I don't need it, since we don't have the photonvision.
         Optional<EstimatedRobotPose> visionEst = Optional.empty();
