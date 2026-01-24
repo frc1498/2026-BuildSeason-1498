@@ -9,6 +9,7 @@ import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Hopper;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.Vision;
 import frc.robot.config.ClimberConfig;
 import frc.robot.config.HopperConfig;
 import frc.robot.config.IntakeConfig;
@@ -76,6 +77,8 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
+    public final Vision vision = new Vision(drivetrain, drivetrain::getStateCopy, drivetrain::addVisionMeasurement);
+
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         // Create DogLog
@@ -130,6 +133,9 @@ public class RobotContainer {
         driver.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        // Add the limelight pose estimate to the drivetrain estimate.
+        //vision.addLimelightPose.whileTrue(vision.addMegaTag2(() -> {return drivetrain;}));
       
         //===================================================
         //===================Driver Commands=================

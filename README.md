@@ -20,12 +20,23 @@ Code for Team 1498's 2026 robot, Aurora Zwei. <br>
 - Add code to drive to a set position during TeleOp.
 
 ### Vision
-The Limelight will be used to supplement the pose estimate.
+01/21/26 - Created the vision subsystem. <br>
+01/21/26 - Added in Limelight functionality.  The code is untested, but it should integrate the megaTag2 estimate into the drivetrain. <br>
+01/21/26 - Started adding in Photonvision functionality.  Still need to look at example code, integrate it into the subsystem, and test.
+#### *Photonvision Notes*
+From looking at the Photonvision documentation and examples, the general process to getting a pose estimate from a camera is:
+- Read all currently unread results from the camera.
+- For each result, estimate the pose.  If the pose is empty (i.e. couldn't be estimated), estimate the lowest ambiguity pose.
+- From the pose, calculate the Std. Dev to pass along with the pose to the drivetrain.
+- Convert the 3d pose to a 2d pose.
+- Send the 2d pose, timestamp, and Std. Dev into the drivetrain. <br>
+
+This needs to be done for both photonvision cameras.
 #### *To-Do*
-- Add the vision subsystem.
-- Configure the Limelight.
-- Create the command and trigger to integrate the pose estimate from vision into the drivetrain.
-- List variables to track in NetworkTables.
+- Measure the robot-relative position of the Limelight on the robot.
+- Test the limelight functionality.
+- Finish adding in photonvision functionality.
+- Finish the list of variables to track in NetworkTables.
 - List variables to log with DogLog.
 
 ### LED
