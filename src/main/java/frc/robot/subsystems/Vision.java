@@ -59,14 +59,16 @@ public class Vision extends SubsystemBase {
     private boolean cachedIsLeftPhotonPoseValid = false;
     private boolean cachedIsRightPhotonPoseValid = false;
     private double limelightTimestamp;
+    private double testTimestamp;
 
     /**
      * Constructor.
      */
     public Vision(CommandSwerveDrivetrain drivetrain, Supplier<SwerveDriveState> swerveDriveState, poseEstimateConsumer poseConsumer) {
         this.drivetrain = drivetrain;
-
-        this.poseConsumer = this.drivetrain::addVisionMeasurement;
+        
+        this.poseConsumer = poseConsumer;
+        //this.poseConsumer = this.drivetrain::addVisionMeasurement;
 
         this.setLimelightRobotPosition();
         //In the constructor, set the IMU mode to 1, so the limelight IMU is seeded with the robot gyro heading.
@@ -321,6 +323,21 @@ public class Vision extends SubsystemBase {
     }
 
     /**
+     * Add the current test pose estimate to the drivetrain pose estimate.
+     * @param drivetrain
+     * @return
+     */
+    public Command addTestPose(Supplier<CommandSwerveDrivetrain> drivetrain) {
+        return run(
+            () -> {
+                testTimestamp = Utils.getCurrentTimeSeconds();
+                drivetrain.get().setVisionMeasurementStdDevs(limelight.kMegaTag2StdDevs);
+                drivetrain.get().addVisionMeasurement(this.testPose, this.testTimestamp);
+            }
+        ).withName("Ading Test Pose Measurement").ignoringDisable(true);
+    }
+
+    /**
      * Switch the limelight to use its internal IMU for the pose estimate.
      * @return
      */
@@ -344,7 +361,7 @@ public class Vision extends SubsystemBase {
         // By caching these values, any other code that requires them will use the same values for the current 20 ms loop.
         this.cachedRobotHeading = this.getRobotHeading();
         this.cachedRobotRotationRate = this.getRobotRotationRate();
-        this.cachedIsRobotSlowEnough = this.isRobotSlowEnough(cachedRobotRotationRate);
+        this.cachedIsRobotSlowEnough = this.isRobotSlowEnough(3.3);
         this.cachedMegaTag2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelight.kName);
         this.cachedMegaTagValid = this.isMegaTagValid(this.cachedMegaTag2);
 
@@ -386,6 +403,9 @@ public class Vision extends SubsystemBase {
 
         // Update the odometry to the test pose, for test purposes.
         limelightField.setRobotPose(this.testPose);
+        testTimestamp = Utils.getCurrentTimeSeconds();
+
+        poseConsumer.accept(this.testPose, this.testTimestamp, limelight.kMegaTag2StdDevs);
     }
 
     @FunctionalInterface
