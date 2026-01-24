@@ -16,6 +16,8 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
+import dev.doglog.DogLog;
+import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -280,6 +282,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
+
+        /*
+         * Create and log CTRE pose estimate
+         */
+        Pose2d pose = getState().Pose;
+        DogLog.log("Pose/Robot/X", pose.getX());
+        DogLog.log("Pose/Robot/Y", pose.getY());
+        DogLog.log("Pose/Robot/RotDeg", pose.getRotation().getDegrees());
     }
 
     private void startSimThread() {
