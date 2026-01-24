@@ -12,11 +12,12 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.hardware.Pigeon2;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -32,7 +33,6 @@ import frc.robot.constants.VisionConstants.photonvision;
 
 public class Vision extends SubsystemBase {
     
-    public Supplier<Pigeon2> drivetrainState;
     public CommandSwerveDrivetrain drivetrain;
     public poseEstimateConsumer poseConsumer;
 
@@ -49,6 +49,7 @@ public class Vision extends SubsystemBase {
     private PhotonPoseEstimator rightCameraEstimator = new PhotonPoseEstimator(photonvision.kTagLayout, photonvision.kRobotToRightCamera);
     
     private LimelightHelpers.PoseEstimate cachedMegaTag2 = new PoseEstimate();
+    private Pose2d testPose = new Pose2d(5.0, 5.0, new Rotation2d(90.0));
     private double cachedRobotHeading = 0.0;
     private double cachedRobotRotationRate = 0.0;
     private boolean cachedMegaTagValid = false;
@@ -62,7 +63,7 @@ public class Vision extends SubsystemBase {
     /**
      * Constructor.
      */
-    public Vision(CommandSwerveDrivetrain drivetrain) {
+    public Vision(CommandSwerveDrivetrain drivetrain, Supplier<SwerveDriveState> swerveDriveState, poseEstimateConsumer poseConsumer) {
         this.drivetrain = drivetrain;
 
         this.poseConsumer = this.drivetrain::addVisionMeasurement;
@@ -213,6 +214,29 @@ public class Vision extends SubsystemBase {
     }
 
     /**
+     * Process the latest camera results from the photon camera.
+     * We still need to determine the return type of this method, and how it passes the estimate back into the periodic method.
+     * @param photonResults
+     * @param photonEstimator
+     */
+    private void processPhotonCameraResults(List<PhotonPipelineResult> photonResults, PhotonPoseEstimator photonEstimator) {
+        Optional<EstimatedRobotPose> visionEst = Optional.empty();
+        for (var result : photonResults) {
+            visionEst = photonEstimator.estimateCoprocMultiTagPose(result);
+            if (visionEst.isEmpty()) {
+                visionEst = photonEstimator.estimateLowestAmbiguityPose(result);
+            }
+            this.updateEstimationStdDevs(photonEstimator, visionEst, result.getTargets());
+            visionEst.ifPresent( est -> {
+                var stddev = getEstimationStdDevs();
+                poseConsumer.accept(est.estimatedPose.toPose2d(), est.timestampSeconds, stddev);
+            });
+
+            this.drivetrain.addVisionMeasurement(visionEst.get().estimatedPose.toPose2d(), visionEst.get().timestampSeconds, this.getEstimationStdDevs());
+        } 
+    }
+
+    /**
      * Calculates new standard deviations. This algorithm is a heuristic that creates dynamic standard deviations based on number of tags, estimation strategy, and distance from the tags.
      * @param camera
      * @param estimatedPose The estimated pose to guess the standard deviations for.
@@ -320,23 +344,29 @@ public class Vision extends SubsystemBase {
         // By caching these values, any other code that requires them will use the same values for the current 20 ms loop.
         this.cachedRobotHeading = this.getRobotHeading();
         this.cachedRobotRotationRate = this.getRobotRotationRate();
+        this.cachedIsRobotSlowEnough = this.isRobotSlowEnough(cachedRobotRotationRate);
         this.cachedMegaTag2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelight.kName);
         this.cachedMegaTagValid = this.isMegaTagValid(this.cachedMegaTag2);
-        this.cachedAreTagsSeen = this.areLimelightTagsSeen(this.cachedMegaTag2, 1);
-        this.cachedIsRobotSlowEnough = this.isRobotSlowEnough(cachedRobotRotationRate);
-        this.cachedIsLimelightPoseValid = this.isLimelightPoseValid(this.cachedMegaTag2);
 
-        //Only update the megaTag if the most recent megaTag is valid.
+        // Only check the number of tags and validity of the pose if the megatag is valid.
+        // Only update the megaTag if the most recent megaTag is valid.
         if (this.cachedMegaTagValid) {
+            this.cachedAreTagsSeen = this.areLimelightTagsSeen(this.cachedMegaTag2, 1);
+            this.cachedIsLimelightPoseValid = this.isLimelightPoseValid(this.cachedMegaTag2);
             this.megaTag2 = this.cachedMegaTag2;
+        } else {
+            // If the megaTag isn't valid, obviously no tags can be seen and the pose isn't valid.
+            this.cachedAreTagsSeen = false;
+            this.cachedIsLimelightPoseValid = false;
         }
 
-        //Every loop, seed the limelight IMU with the current robot heading.
+        // Every loop, seed the limelight IMU with the current robot heading.
         LimelightHelpers.SetRobotOrientation(limelight.kName, this.cachedRobotHeading, 0.0, 0.0, 0.0, 0.0, 0.0);
 
-        //Every loop, update the odometry with the current pose estimated by the limelight.
+        // Every loop, update the odometry with the current pose estimated by the limelight.
         limelightField.setRobotPose(this.getCurrentLimelightPose());
 
+        /* This code is for the photonvision estimate.  Currently, I don't need it, since we don't have the photonvision.
         Optional<EstimatedRobotPose> visionEst = Optional.empty();
         for (var result : leftCamera.getAllUnreadResults()) {
             visionEst = leftCameraEstimator.estimateCoprocMultiTagPose(result);
@@ -347,11 +377,15 @@ public class Vision extends SubsystemBase {
 
             this.drivetrain.addVisionMeasurement(visionEst.get().estimatedPose.toPose2d(), visionEst.get().timestampSeconds, this.getEstimationStdDevs());
         }
+        */
     }
 
     @Override
     public void simulationPeriodic() {
         // This method will be called once per scheduler run during simulation.
+
+        // Update the odometry to the test pose, for test purposes.
+        limelightField.setRobotPose(this.testPose);
     }
 
     @FunctionalInterface

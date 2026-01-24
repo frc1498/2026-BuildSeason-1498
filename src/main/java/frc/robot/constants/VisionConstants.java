@@ -18,8 +18,8 @@ public class VisionConstants {
 
     public static class limelight {
         public static final String kName = "limelight";
-        public static final double kForwardOffset = 0.34925;   // meters from the center of the robot.
-        public static final double kSideOffset = 0.180975;     // meters from the center of the robot.
+        public static final double kForwardOffset = 0.01905;   // 3/4 inches (0.01905 meters) from the center of the robot.
+        public static final double kSideOffset = 0.130175;     // 5-1/8 inches (0.130175 meters) from the center of the robot.
         public static final double kUpOffset = 0.2746375;      // meters from the center of the robot.
         public static final double kRollOffset = 0.0;          // degrees from vertical.
         public static final double kPitchOffset = 0.0;         // degrees from vertical.
