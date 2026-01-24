@@ -55,9 +55,6 @@ public class RobotContainer {
   public IntakeConfig intakeConfig = new IntakeConfig();
   public Intake intake = new Intake(intakeConfig);
 
-  public ShooterConfig shooterConfig = new ShooterConfig();
-  public Shooter shooter = new Shooter(shooterConfig);
-
     //Gamepad assignment
     //Instantiate 
     private final CommandXboxController driver = new CommandXboxController(ControllerConstants.kDriverControllerPort);
@@ -78,6 +75,9 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     public final Vision vision = new Vision(drivetrain, drivetrain::getStateCopy, drivetrain::addVisionMeasurement);
+
+    public ShooterConfig shooterConfig = new ShooterConfig();
+    public Shooter shooter = new Shooter(shooterConfig, () -> {return drivetrain.getStateCopy().Pose;});
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
