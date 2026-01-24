@@ -334,7 +334,7 @@ public class Vision extends SubsystemBase {
                 drivetrain.get().setVisionMeasurementStdDevs(limelight.kMegaTag2StdDevs);
                 drivetrain.get().addVisionMeasurement(this.testPose, this.testTimestamp);
             }
-        ).withName("Ading Test Pose Measurement").ignoringDisable(true);
+        ).withName("Adding Test Pose Measurement").ignoringDisable(true);
     }
 
     /**
@@ -351,6 +351,7 @@ public class Vision extends SubsystemBase {
         builder.addDoubleProperty("Robot Heading", () -> {return this.cachedRobotHeading;}, null);
         builder.addDoubleProperty("Robot Rotation Rate", () -> {return this.cachedRobotRotationRate;}, null);
         builder.addBooleanProperty("Is Robot Slow Enough", () -> {return this.cachedIsRobotSlowEnough;}, null);
+        builder.addDoubleProperty("Test Timestamp", () -> {return this.testTimestamp;}, null);
     }
 
     @Override
@@ -381,7 +382,7 @@ public class Vision extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(limelight.kName, this.cachedRobotHeading, 0.0, 0.0, 0.0, 0.0, 0.0);
 
         // Every loop, update the odometry with the current pose estimated by the limelight.
-        limelightField.setRobotPose(this.getCurrentLimelightPose());
+        // limelightField.setRobotPose(this.getCurrentLimelightPose());
 
         /* This code is for the photonvision estimate.  Currently, I don't need it, since we don't have the photonvision.
         Optional<EstimatedRobotPose> visionEst = Optional.empty();
@@ -402,8 +403,9 @@ public class Vision extends SubsystemBase {
         // This method will be called once per scheduler run during simulation.
 
         // Update the odometry to the test pose, for test purposes.
-        limelightField.setRobotPose(this.testPose);
-        testTimestamp = Utils.getCurrentTimeSeconds();
+        this.testPose = new Pose2d(5.0 + Math.random(), 5.0 + Math.random(), new Rotation2d(Math.random() * 180.0));
+        this.limelightField.setRobotPose(this.testPose);
+        this.testTimestamp = Utils.getCurrentTimeSeconds();
 
         poseConsumer.accept(this.testPose, this.testTimestamp, limelight.kMegaTag2StdDevs);
     }
