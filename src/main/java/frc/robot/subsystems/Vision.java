@@ -378,6 +378,10 @@ public class Vision extends SubsystemBase {
             this.cachedIsLimelightPoseValid = false;
         }
 
+        if (cachedIsLimelightPoseValid) {
+            poseConsumer.accept(this.getCurrentLimelightPose(), this.megaTag2.timestampSeconds, limelight.kMegaTag2StdDevs);
+        }
+
         // Every loop, seed the limelight IMU with the current robot heading.
         LimelightHelpers.SetRobotOrientation(limelight.kName, this.cachedRobotHeading, 0.0, 0.0, 0.0, 0.0, 0.0);
 
