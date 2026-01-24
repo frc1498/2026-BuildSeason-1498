@@ -136,7 +136,6 @@ public class RobotContainer {
 
         //Add the limelight pose estimate to the drivetrain estimate.
         vision.addLimelightPose.whileTrue(vision.addMegaTag2(() -> {return drivetrain;}));
-        driver.x().whileTrue(vision.addTestPose(() -> {return drivetrain;}));
       
         //===================================================
         //===================Driver Commands=================

@@ -390,7 +390,7 @@ public class Vision extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(limelight.kName, this.cachedRobotHeading, 0.0, 0.0, 0.0, 0.0, 0.0);
 
         // Every loop, update the odometry with the current pose estimated by the limelight.
-        // limelightField.setRobotPose(this.getCurrentLimelightPose());
+        limelightField.setRobotPose(this.getCurrentLimelightPose());
 
         /* This code is for the photonvision estimate.  Currently, I don't need it, since we don't have the photonvision.
         Optional<EstimatedRobotPose> visionEst = Optional.empty();
@@ -411,6 +411,7 @@ public class Vision extends SubsystemBase {
         // This method will be called once per scheduler run during simulation.
 
         // Update the odometry to the test pose, for test purposes.
+        // Add some noise to the test pose - although this is a annoying way to do it.
         this.testPose = new Pose2d(5.0 + Math.random(), 5.0 + Math.random(), new Rotation2d(Math.random() * 180.0));
         this.limelightField.setRobotPose(this.testPose);
         this.testTimestamp = Utils.getCurrentTimeSeconds();
