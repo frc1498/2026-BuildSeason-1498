@@ -14,6 +14,9 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
+import dev.doglog.DogLog;
+import dev.doglog.DogLogOptions;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -372,6 +375,11 @@ public class Vision extends SubsystemBase {
             this.cachedAreTagsSeen = this.areLimelightTagsSeen(this.cachedMegaTag2, 1);
             this.cachedIsLimelightPoseValid = this.isLimelightPoseValid(this.cachedMegaTag2);
             this.megaTag2 = this.cachedMegaTag2;
+            // Log Limelight pose estimate
+            Pose2d llPose = this.megaTag2.pose;
+            DogLog.log("Vision/Limelight/X" , llPose.getX());
+            DogLog.log("Vision/Limelight/Y" , llPose.getY());
+            DogLog.log("Vision/Limelight/RotDeg" , llPose.getRotation().getDegrees());
         } else {
             // If the megaTag isn't valid, obviously no tags can be seen and the pose isn't valid.
             this.cachedAreTagsSeen = false;
