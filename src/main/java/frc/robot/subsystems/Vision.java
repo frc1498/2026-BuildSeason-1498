@@ -403,6 +403,7 @@ public class Vision extends SubsystemBase {
         // This method will be called once per scheduler run during simulation.
 
         // Update the odometry to the test pose, for test purposes.
+        // Add some noise to the test pose - although this is a annoying way to do it.
         this.testPose = new Pose2d(5.0 + Math.random(), 5.0 + Math.random(), new Rotation2d(Math.random() * 180.0));
         this.limelightField.setRobotPose(this.testPose);
         this.testTimestamp = Utils.getCurrentTimeSeconds();
