@@ -31,10 +31,10 @@ public class LED extends SubsystemBase{
 
     }
     
-    private Command setColor(LEDState state) {
+    /*private Command setColor(LEDState state) {
         runOnce(() -> {
             candle.set(state.color,)
         });
-    }
+    }*/
 
 }
