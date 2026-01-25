@@ -38,7 +38,7 @@ public class ShooterConstants {
   public static final int kKickupMaxSpeed = 0;
   public static final int kKickupMinSpeed = 0;
 
-  public static final Pose2d kRedHubCenter = new Pose2d(11.912, 4.028, new Rotation2d(0.0));
+  public static final Pose2d kRedHubCenter = new Pose2d(11.912, 4.028, Rotation2d.fromDegrees(180.0));
   public static final Pose2d kBlueHubCenter = new Pose2d(4.622, 4.028, new Rotation2d(0.0));
 
   public static final InterpolatingDoubleTreeMap hoodAngleMap = new InterpolatingDoubleTreeMap(); // First column is distance (in meters), second column is angle (in degrees).

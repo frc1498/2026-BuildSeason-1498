@@ -13,9 +13,11 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -51,12 +53,19 @@ public class Shooter extends SubsystemBase {
   private double desiredKickupSpeed;
   private double desiredSpindexerSpeed;
 
-  private Supplier<Pose2d> poseSupplier;
+  private Supplier<SwerveDriveState> swerveStateSupplier;
   private double distanceToTarget;
+  private double distanceToVirtualTarget;
+
+  private double virtualHoodAngle;
+  private double virtualFlywheelSpeed;
+  private double virtualTurretAngle;
+
+  public Field2d targetingField = new Field2d();
 
 
 /** Creates a new ExampleSubsystem. */
-public Shooter(ShooterConfig config, Supplier<Pose2d> chassisSpeed) {
+public Shooter(ShooterConfig config, Supplier<SwerveDriveState> swerveDriveState) {
   shooter1Motor = new TalonFX(config.kShooter1MotorCANID, "canivore");  //Create a motor for this subsystem
   this.configureMechanism(shooter1Motor, config.shooter1MotorConfig);
 
@@ -80,9 +89,10 @@ public Shooter(ShooterConfig config, Supplier<Pose2d> chassisSpeed) {
   hoodMotorMode = new PositionVoltage(0);  //Set the motor's control mode
   this.configureMechanism(hoodMotor, config.hoodMotorConfig);
 
-  this.poseSupplier = chassisSpeed;
+  this.swerveStateSupplier = swerveDriveState;
 
   SmartDashboard.putData("Shooter", this);
+  SmartDashboard.putData("Shooter/Pose", this.targetingField);
 }
 
 public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config){     
@@ -224,13 +234,26 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config){
   @Override
   public void initSendable(SendableBuilder builder) {
     builder.addDoubleProperty("Distance to Target", () -> {return distanceToTarget;}, null);
+    builder.addDoubleProperty("Distance to Virtual Target", () -> {return distanceToVirtualTarget;}, null);
+    builder.addDoubleProperty("Virtual Hood Angle", () -> {return virtualHoodAngle;}, null);
+    builder.addDoubleProperty("Virtual Flywheel Speed", () -> {return virtualFlywheelSpeed;}, null);
+    builder.addDoubleProperty("Virtual Turret Angle", () -> {return virtualTurretAngle;}, null);
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    this.distanceToTarget = ShotCalculation.getInstance().getTargetDistance(this.poseSupplier.get(), ShooterConstants.kRedHubCenter);
+    this.distanceToTarget = ShotCalculation.getInstance().getTargetDistance(this.swerveStateSupplier.get().Pose, ShooterConstants.kRedHubCenter);
+    this.currentTarget = ShotCalculation.getInstance().getVirtualTarget(this.swerveStateSupplier.get().Speeds, ShooterConstants.timeOfFlightMap.get(this.distanceToTarget), ShooterConstants.kRedHubCenter);
+    
+    this.distanceToVirtualTarget = ShotCalculation.getInstance().getTargetDistance(this.swerveStateSupplier.get().Pose, this.currentTarget);
 
+    this.virtualHoodAngle = ShooterConstants.hoodAngleMap.get(this.distanceToVirtualTarget);
+    this.virtualFlywheelSpeed = ShooterConstants.flywheelSpeedMap.get(this.distanceToVirtualTarget);
+    // this.virtualTurretAngle = swerveStateSupplier.get().Pose.getRotation().minus(this.currentTarget.getRotation()).getDegrees();
+    this.virtualTurretAngle = this.currentTarget.minus(swerveStateSupplier.get().Pose).getTranslation().getAngle().getDegrees();
+
+    this.targetingField.setRobotPose(this.currentTarget);
   }
 
   @Override

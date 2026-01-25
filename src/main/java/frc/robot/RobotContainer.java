@@ -77,7 +77,7 @@ public class RobotContainer {
     public final Vision vision = new Vision(drivetrain, drivetrain::getStateCopy, drivetrain::addVisionMeasurement);
 
     public ShooterConfig shooterConfig = new ShooterConfig();
-    public Shooter shooter = new Shooter(shooterConfig, () -> {return drivetrain.getStateCopy().Pose;});
+    public Shooter shooter = new Shooter(shooterConfig, drivetrain::getStateCopy);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
