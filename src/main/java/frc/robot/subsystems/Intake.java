@@ -26,7 +26,7 @@ public class Intake extends SubsystemBase {
   //Constructor
   public Intake(IntakeConfig config) {
 
-    intakeMotor = new TalonFX(config.kIntakeCANID, "canivore");  //Create the intake motor for this subsystem
+    intakeMotor = new TalonFX(IntakeConfig.kIntakeCANID, "canivore");  //Create the intake motor for this subsystem
     intakeMotorMode = new VelocityVoltage(0);  //Set the motor's control mode
 
     this.configureMechanism(intakeMotor, config.intakeConfig);

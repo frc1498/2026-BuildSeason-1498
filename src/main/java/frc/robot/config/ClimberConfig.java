@@ -7,80 +7,117 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class ClimberConfig {
     //Constants go here
-    public static final int kInnerClimbMotorCANID=0;
-    public static final int kOuterClimbMotorCANID=0;
+    public static final int kLiftClimbMotorCANID=0;
+    public static final int kRotateClimb1MotorCANID=0;
+    public static final int kRotateClimb2MotorCANID=0;
 
     //Variables
-    public TalonFXConfiguration innerClimbMotorConfig;
-    public TalonFXConfiguration outerClimbMotorConfig;
+    public TalonFXConfiguration liftClimbMotorConfig;
+    public TalonFXConfiguration rotateClimb1MotorConfig;
+    public TalonFXConfiguration rotateClimb2MotorConfig;
 
     //Constructor
     public ClimberConfig(){
-        innerClimbMotorConfig = new TalonFXConfiguration();  //Instantiate - make a framework
-        this.configureInnerClimber(innerClimbMotorConfig);  //Fill in framework 
+        liftClimbMotorConfig = new TalonFXConfiguration();  //Instantiate - make a framework
+        this.configureLiftClimber(liftClimbMotorConfig);  //Fill in framework 
 
-        outerClimbMotorConfig = new TalonFXConfiguration();  //Instantiate - make a framework
-        this.configureOuterClimber(outerClimbMotorConfig);  //Fill in framework 
+        rotateClimb1MotorConfig = new TalonFXConfiguration();  //Instantiate - make a framework
+        this.configureRotateClimber1(rotateClimb1MotorConfig);  //Fill in framework 
+
+        rotateClimb2MotorConfig = new TalonFXConfiguration();  //Instantiate - make a framework
+        this.configureRotateClimber2(rotateClimb2MotorConfig);  //Fill in framework 
+
     }
 
-    public void configureInnerClimber(TalonFXConfiguration innerClimber){
+    public void configureLiftClimber(TalonFXConfiguration liftClimber){
 //configure motor
-        innerClimber.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        innerClimber.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        innerClimber.MotorOutput.PeakForwardDutyCycle = 1;
-        innerClimber.MotorOutput.PeakReverseDutyCycle = -1;
+        liftClimber.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        liftClimber.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        liftClimber.MotorOutput.PeakForwardDutyCycle = 1;
+        liftClimber.MotorOutput.PeakReverseDutyCycle = -1;
 
-        innerClimber.CurrentLimits.StatorCurrentLimit = 120.0;
-        innerClimber.CurrentLimits.StatorCurrentLimitEnable = true;
-        innerClimber.CurrentLimits.SupplyCurrentLimit = 20;    //Was 20
-        innerClimber.CurrentLimits.SupplyCurrentLimitEnable = true;
-        innerClimber.CurrentLimits.SupplyCurrentLowerLimit = 40.0;
-        innerClimber.CurrentLimits.SupplyCurrentLowerTime = 1;
+        liftClimber.CurrentLimits.StatorCurrentLimit = 120.0;
+        liftClimber.CurrentLimits.StatorCurrentLimitEnable = true;
+        liftClimber.CurrentLimits.SupplyCurrentLimit = 20;    //Was 20
+        liftClimber.CurrentLimits.SupplyCurrentLimitEnable = true;
+        liftClimber.CurrentLimits.SupplyCurrentLowerLimit = 40.0;
+        liftClimber.CurrentLimits.SupplyCurrentLowerTime = 1;
 
         //Slot 0 Configs
-        innerClimber.Slot0.kP = 0;  // An error of 1 rotation per second results in 2V output
-        innerClimber.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
-        innerClimber.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
-        innerClimber.Slot0.kS = 0;
-        innerClimber.Slot0.kV = 0;  // KV for a Kraken X60 is 490 rpm/V. 490/60 is 8.1667 rps/V.  The inverse is 0.122449 V/rps.
-        innerClimber.Slot0.kA = 0;
-        innerClimber.Slot0.kG = 0;
-        innerClimber.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+        liftClimber.Slot0.kP = 0;  // An error of 1 rotation per second results in 2V output
+        liftClimber.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
+        liftClimber.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
+        liftClimber.Slot0.kS = 0;
+        liftClimber.Slot0.kV = 0;  // KV for a Kraken X60 is 490 rpm/V. 490/60 is 8.1667 rps/V.  The inverse is 0.122449 V/rps.
+        liftClimber.Slot0.kA = 0;
+        liftClimber.Slot0.kG = 0;
+        liftClimber.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
-        innerClimber.Voltage.PeakForwardVoltage = 11;
-        innerClimber.Voltage.PeakReverseVoltage = -11;
+        liftClimber.Voltage.PeakForwardVoltage = 11;
+        liftClimber.Voltage.PeakReverseVoltage = -11;
 
-        innerClimber.Audio.AllowMusicDurDisable = true;
+        liftClimber.Audio.AllowMusicDurDisable = true;
     }
 
-    public void configureOuterClimber(TalonFXConfiguration outerClimber){
+    public void configureRotateClimber1(TalonFXConfiguration rotateClimber){
      //configure motor
-        outerClimber.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        outerClimber.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        outerClimber.MotorOutput.PeakForwardDutyCycle = 1;
-        outerClimber.MotorOutput.PeakReverseDutyCycle = -1;
+        rotateClimber.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        rotateClimber.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        rotateClimber.MotorOutput.PeakForwardDutyCycle = 1;
+        rotateClimber.MotorOutput.PeakReverseDutyCycle = -1;
 
-        outerClimber.CurrentLimits.StatorCurrentLimit = 120.0;
-        outerClimber.CurrentLimits.StatorCurrentLimitEnable = true;
-        outerClimber.CurrentLimits.SupplyCurrentLimit = 20;    //Was 20
-        outerClimber.CurrentLimits.SupplyCurrentLimitEnable = true;
-        outerClimber.CurrentLimits.SupplyCurrentLowerLimit = 40.0;
-        outerClimber.CurrentLimits.SupplyCurrentLowerTime = 1;
+        rotateClimber.CurrentLimits.StatorCurrentLimit = 120.0;
+        rotateClimber.CurrentLimits.StatorCurrentLimitEnable = true;
+        rotateClimber.CurrentLimits.SupplyCurrentLimit = 20;    //Was 20
+        rotateClimber.CurrentLimits.SupplyCurrentLimitEnable = true;
+        rotateClimber.CurrentLimits.SupplyCurrentLowerLimit = 40.0;
+        rotateClimber.CurrentLimits.SupplyCurrentLowerTime = 1;
 
         //Slot 0 Configs
-        outerClimber.Slot0.kP = 0;  // An error of 1 rotation per second results in 2V output
-        outerClimber.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
-        outerClimber.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
-        outerClimber.Slot0.kS = 0;
-        outerClimber.Slot0.kV = 0;  // KV for a Kraken X60 is 490 rpm/V. 490/60 is 8.1667 rps/V.  The inverse is 0.122449 V/rps.
-        outerClimber.Slot0.kA = 0;
-        outerClimber.Slot0.kG = 0;
-        outerClimber.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+        rotateClimber.Slot0.kP = 0;  // An error of 1 rotation per second results in 2V output
+        rotateClimber.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
+        rotateClimber.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
+        rotateClimber.Slot0.kS = 0;
+        rotateClimber.Slot0.kV = 0;  // KV for a Kraken X60 is 490 rpm/V. 490/60 is 8.1667 rps/V.  The inverse is 0.122449 V/rps.
+        rotateClimber.Slot0.kA = 0;
+        rotateClimber.Slot0.kG = 0;
+        rotateClimber.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
-        outerClimber.Voltage.PeakForwardVoltage = 11;
-        outerClimber.Voltage.PeakReverseVoltage = -11;
+        rotateClimber.Voltage.PeakForwardVoltage = 11;
+        rotateClimber.Voltage.PeakReverseVoltage = -11;
 
-        outerClimber.Audio.AllowMusicDurDisable = true;   
+        rotateClimber.Audio.AllowMusicDurDisable = true;   
     }
+
+    public void configureRotateClimber2(TalonFXConfiguration rotateClimber){
+     //configure motor
+        rotateClimber.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        rotateClimber.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        rotateClimber.MotorOutput.PeakForwardDutyCycle = 1;
+        rotateClimber.MotorOutput.PeakReverseDutyCycle = -1;
+
+        rotateClimber.CurrentLimits.StatorCurrentLimit = 120.0;
+        rotateClimber.CurrentLimits.StatorCurrentLimitEnable = true;
+        rotateClimber.CurrentLimits.SupplyCurrentLimit = 20;    //Was 20
+        rotateClimber.CurrentLimits.SupplyCurrentLimitEnable = true;
+        rotateClimber.CurrentLimits.SupplyCurrentLowerLimit = 40.0;
+        rotateClimber.CurrentLimits.SupplyCurrentLowerTime = 1;
+
+        //Slot 0 Configs
+        rotateClimber.Slot0.kP = 0;  // An error of 1 rotation per second results in 2V output
+        rotateClimber.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
+        rotateClimber.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
+        rotateClimber.Slot0.kS = 0;
+        rotateClimber.Slot0.kV = 0;  // KV for a Kraken X60 is 490 rpm/V. 490/60 is 8.1667 rps/V.  The inverse is 0.122449 V/rps.
+        rotateClimber.Slot0.kA = 0;
+        rotateClimber.Slot0.kG = 0;
+        rotateClimber.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+
+        rotateClimber.Voltage.PeakForwardVoltage = 11;
+        rotateClimber.Voltage.PeakReverseVoltage = -11;
+
+        rotateClimber.Audio.AllowMusicDurDisable = true;   
+    }
+
 
 }
