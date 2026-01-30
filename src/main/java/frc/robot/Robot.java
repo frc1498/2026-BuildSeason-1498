@@ -9,6 +9,7 @@ import com.pathplanner.lib.commands.PathfindingCommand;
 
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.net.WebServer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;

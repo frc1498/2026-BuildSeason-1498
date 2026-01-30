@@ -129,7 +129,7 @@ public class Selector extends SubsystemBase {
             this.currentSelection = 0;
         }
         else {
-            this.currentSelection = 0;
+            this.currentSelection = this.selections.size() - 1;
         }
     }
 

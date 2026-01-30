@@ -19,14 +19,17 @@ import static edu.wpi.first.units.Units.*;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.function.Supplier;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
 
@@ -34,6 +37,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
@@ -145,7 +149,9 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
-
+        this.DSAttached.onTrue(autonSelect.filterList(() -> {return DriverStation.getAlliance().get().toString();})
+            .andThen(() -> {this.autonCommands = this.loadAllAutonomous(autonSelect.currentList());}).ignoringDisable(true)
+            .andThen(() -> {this.selectedAuton = autonCommands.get(autonSelect.currentIndex().get());}).ignoringDisable(true));
 
         // Add the limelight pose estimate to the drivetrain estimate.
         //vision.addLimelightPose.whileTrue(vision.addMegaTag2(() -> {return drivetrain;}));
@@ -155,10 +161,10 @@ public class RobotContainer {
         //===================================================
 
         //Driver POV Up
-        //driver.povUp().
+        driver.povUp().onTrue(autonSelect.increment().andThen(() -> {this.selectedAuton = this.autonCommands.get(this.autonSelect.currentIndex().get());}).ignoringDisable(true));
 
         //Driver POV Down
-        //driver.povDown().
+        driver.povDown().onTrue(autonSelect.decrement().andThen(() -> {this.selectedAuton = this.autonCommands.get(this.autonSelect.currentIndex().get());}).ignoringDisable(true));
 
         //Driver POV Left
         //driver.povLeft().
@@ -269,4 +275,22 @@ public class RobotContainer {
         );
         */
     }
+
+    /**
+     * Takes a list of PathPlanner auton file names and returns a list of PathPlanner commands based on the list.
+     * @param autonList
+     * @return
+     */
+    public ArrayList<Command> loadAllAutonomous(Supplier<ArrayList<String>> autonList) {
+        ArrayList<Command> commandList = new ArrayList<Command>();
+        for (var i : autonList.get()) {
+            commandList.add(new PathPlannerAuto(i));
+        }
+
+        return commandList;
+    }
+
+    // Use these triggers to determine when to filter the list of autons.
+    public Trigger DSAttached = new Trigger(DriverStation::isDSAttached);
+    public Trigger alliancePresent = new Trigger(() -> {return DriverStation.getAlliance().isPresent();});
 }
