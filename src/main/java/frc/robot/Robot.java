@@ -5,6 +5,12 @@
 package frc.robot;
 
 import com.ctre.phoenix6.HootAutoReplay;
+import com.pathplanner.lib.commands.PathfindingCommand;
+
+import edu.wpi.first.net.PortForwarder;
+import edu.wpi.first.net.WebServer;
+import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -32,6 +38,24 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+  }
+
+  @Override
+  public void robotInit() {
+    // Port Forwarding for the limelight.
+    for (int port = 5800; port <= 5809; port++) {
+      PortForwarder.add(port, "limelight.local", port);
+    }
+
+    // Get the deploy directory for Elastic.
+    WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+
+    // Set the RoboRIO2 custom brownout voltage.
+    RobotController.setBrownoutVoltage(4.5);
+
+    // This code was previously PathfindingCommand.warmupCommand.schedule();  That format has been deprecated, so I'm using this new format.
+    // This warmup command should help with the initial loading of autonomous paths.
+    CommandScheduler.getInstance().schedule(PathfindingCommand.warmupCommand());
   }
 
   /**
