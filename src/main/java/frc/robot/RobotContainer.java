@@ -17,12 +17,17 @@ import frc.robot.config.ShooterConfig;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.io.File;
+import java.util.ArrayList;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -41,22 +46,28 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 * subsystems, commands, and trigger mappings) should be declared here.
 */
 public class RobotContainer {
-  // The robot's subsystems and commands are defined here...
+    // The robot's subsystems and commands are defined here...
 
-  //=======================================================================
-  //=======================Assign Subsystem Names==========================
-  //======================================================================= 
-  public final ClimberConfig climberConfig = new ClimberConfig();
-  public Climber climber = new Climber(climberConfig);
+    //=======================================================================
+    //=======================Assign Subsystem Names==========================
+    //======================================================================= 
+    public final ClimberConfig climberConfig = new ClimberConfig();
+    public Climber climber = new Climber(climberConfig);
 
-  public HopperConfig hopperConfig = new HopperConfig();
-  public Hopper hopper = new Hopper(hopperConfig);
+    public HopperConfig hopperConfig = new HopperConfig();
+    public Hopper hopper = new Hopper(hopperConfig);
 
-  public IntakeConfig intakeConfig = new IntakeConfig();
-  public Intake intake = new Intake(intakeConfig);
+    public IntakeConfig intakeConfig = new IntakeConfig();
+    public Intake intake = new Intake(intakeConfig);
 
-  public ShooterConfig shooterConfig = new ShooterConfig();
-  public Shooter shooter = new Shooter(shooterConfig);
+    public ShooterConfig shooterConfig = new ShooterConfig();
+    public Shooter shooter = new Shooter(shooterConfig);
+
+    public File autonFolder = new File(Filesystem.getDeployDirectory() + "/pathplanner/autos");
+    public Selector autonSelect = new Selector(autonFolder, ".auto", "Auton Selector");
+    public Command selectedAuton;
+    public ArrayList<Command> autonCommands = new ArrayList<Command>();
+    
 
     //Gamepad assignment
     //Instantiate 
@@ -133,6 +144,8 @@ public class RobotContainer {
         driver.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+
 
         // Add the limelight pose estimate to the drivetrain estimate.
         //vision.addLimelightPose.whileTrue(vision.addMegaTag2(() -> {return drivetrain;}));
