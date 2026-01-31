@@ -19,13 +19,20 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
  */
 public class ShooterConstants {
 
-  //==============Positions=================
+  /*==============Positions=================*/
 
-  //===============Speeds===================
+  /*===============Speeds===================*/
   public static final int kKickUpIntake = 0;
   public static final int kKickUpOuttake = 0;
 
-  //===============Safeties==================
+  /* Deadbands */
+  public static final double kHoodPositionDeadband = 0;
+  public static final double kTurretPositionDeadband = 0;
+  public static final double kShooterVelocityDeadband = 0;
+  public static final double kKickupVelocityDeadband = 0;
+  public static final double kSpindexerVelocityDeadband = 0;
+
+  /*===============Safeties==================*/
   public static final int kHoodSafeExtend = 0;
   public static final int kHoodSafeRetract = 0;
   
@@ -45,6 +52,15 @@ public class ShooterConstants {
   public static final InterpolatingDoubleTreeMap flywheelSpeedMap = new InterpolatingDoubleTreeMap(); // First column is distance (in meters), second column is speed (in rotations per minute).
   public static final InterpolatingDoubleTreeMap timeOfFlightMap = new InterpolatingDoubleTreeMap();  // First column is distance (in meters), second column is time (in seconds).
                                                                                                       // Time of flight is the amount of time that the ball is in the air.
+
+  // An enumeration of shooter faults to log with DogLog.
+  public static enum ShooterFault {
+    HOOD_SETPOINT_OUT_OF_RANGE,
+    TURRET_SETPOINT_OUT_OF_RANGE,
+    SHOOTER_SETPOINT_OUT_OF_RANGE,
+    KICKUP_SETPOINT_OUT_OF_RANGE,
+    SPINDEXER_SETPOINT_OUT_OF_RANGE
+  }
 
   // None of these values are currently 'real'.  We need theoretical values for testing the algorithm.
   static {

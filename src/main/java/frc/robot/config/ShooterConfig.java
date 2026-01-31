@@ -7,12 +7,12 @@ import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
 public class ShooterConfig {
     //Constants go Here
-    public static final int kShooter1MotorCANID=0;
-    public static final int kShooter2MotorCANID=0;
-    public static final int kHoodMotorCANID=0;
-    public static final int kTurretMotorCANID=0;
-    public static final int kSpindexerMotorCANID=0;
-    public static final int kKickupMotorCANID=0;
+    public static final int kShooter1MotorCANID = 0;
+    public static final int kShooter2MotorCANID = 0;
+    public static final int kHoodMotorCANID = 0;
+    public static final int kTurretMotorCANID = 0;
+    public static final int kSpindexerMotorCANID = 0;
+    public static final int kKickupMotorCANID = 0;
    
     //Variables
     public TalonFXConfiguration hoodMotorConfig; //x44 motor
