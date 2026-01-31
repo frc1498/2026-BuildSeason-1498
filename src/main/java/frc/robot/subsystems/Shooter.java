@@ -78,6 +78,51 @@ public class Shooter extends SubsystemBase {
 
   public Field2d targetingField = new Field2d();
 
+  private enum ShooterState {
+    IDLE(0.0, 0.0, true),
+    FORWARD(ShooterConstants.kSpindexerIntake, ShooterConstants.kKickupIntake, true),
+    REVERSE(ShooterConstants.kSpindexerOuttake, ShooterConstants.kKickupOuttake, false);
+
+    private double spindexerVelocity;
+    private double kickupVelocity;
+    private boolean direction;
+
+    /**
+     * Constructor for the ShooterState enumeration.
+     * @param spindexerVelocity - The velocity of the spindexer.
+     * @param kickupVelocity - The direction of the kickup motor.
+     * @param direction - Represents direction of the motors.  True is forward (intake), false is reverse (outtake).
+     */
+    ShooterState(double spindexerVelocity, double kickupVelocity, boolean direction) {
+      this.spindexerVelocity = spindexerVelocity;
+      this.kickupVelocity = kickupVelocity;
+      this.direction = direction;
+    }
+
+    /**
+     * Returns the spindexer velocity for the state.
+     * @return - Desired velocity for the spindexer, in rotations per second.
+     */
+    public double spindexer() {
+      return this.spindexerVelocity;
+    }
+
+    /**
+     * Returns the kickup velocity for the state.
+     * @return - Desired velocity for the kickup motor, in rotations per second.
+     */
+    public double kickup() {
+      return this.kickupVelocity;
+    }
+
+    /**
+     * Returns the motor direction for the state.
+     * @return - Motor direction.  True is forward (intake), false is reverse (outtake).
+     */
+    public boolean direction() {
+      return this.direction;
+    }
+  }
 
 /**
  * Creates a new instance of the shooter subsystem.
@@ -317,8 +362,19 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
     }).withName("setShooterOutputs");
   }
 
+  /**
+   * Sets the spindexer and kickup velocity based on the supplied state.
+   */
+  private Command setSpindexerAndKickup(ShooterState state) {
+    return runOnce(() -> {
+      this.setKickupVelocity(state.kickup());
+      this.setSpindexerSpeed(state.spindexer());
+    }).withName("setSpindeerAndKickup: " + state.name());
+  }
 
-
+  public Command setSpindexerAndKickupForward() {return this.setSpindexerAndKickup(ShooterState.FORWARD);};
+  public Command setSpindexerAndKickupReverse() {return this.setSpindexerAndKickup(ShooterState.REVERSE);};
+  public Command setSpindexerAndKickupIdle() {return this.setSpindexerAndKickup(ShooterState.IDLE);};
 
   /*======================Triggers=========================*/
   public Trigger isHoodAtPosition = new Trigger(() -> {return this.hoodAtPosition;});
@@ -340,6 +396,8 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
     builder.addDoubleProperty("Desired Hood Position", () -> {return this.desiredHoodPosition;}, null);
     builder.addDoubleProperty("Desired Turret Position", () -> {return this.desiredTurretPosition;}, null);
     builder.addDoubleProperty("Desired Shooter Velocity", () -> {return this.desiredShooterVelocity;}, null);
+    builder.addDoubleProperty("Desired Spindexer Velocity", () -> {return this.desiredSpindexerVelocity;}, null);
+    builder.addDoubleProperty("Desired Kickup Velocity", () -> {return this.desiredKickupVelocity;}, null);
   }
 
   @Override

@@ -7,7 +7,6 @@ package frc.robot.constants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -22,8 +21,10 @@ public class ShooterConstants {
   /*==============Positions=================*/
 
   /*===============Speeds===================*/
-  public static final int kKickUpIntake = 0;
-  public static final int kKickUpOuttake = 0;
+  public static final double kKickupIntake = 10;
+  public static final double kKickupOuttake = -10;
+  public static final double kSpindexerIntake = 10;
+  public static final double kSpindexerOuttake = -10;
 
   /* Deadbands */
   public static final double kHoodPositionDeadband = 0;

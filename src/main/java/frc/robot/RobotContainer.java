@@ -157,10 +157,10 @@ public class RobotContainer {
         driver.x().onTrue(shooter.setShooterOutputs());
 
         //Driver Y button
-        //driver.y().
+        driver.y().onTrue(shooter.setSpindexerAndKickupForward());
 
         //Driver A button
-        //driver.a().
+        driver.a().onTrue(shooter.setSpindexerAndKickupIdle());
 
         //Driver B button
         //driver.b().
