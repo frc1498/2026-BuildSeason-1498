@@ -8,16 +8,14 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.config.ClimberConfig;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.config.ShooterConfig;
-import frc.robot.constants.HopperConstants;
-import frc.robot.constants.IntakeConstants;
 import frc.robot.constants.MotorEnableConstants;
 import frc.robot.constants.ShooterConstants;
 
@@ -39,32 +37,37 @@ public class Shooter extends SubsystemBase {
 
   ShooterConfig shooterConfig; //Create an object of type climber config to use to configure motors
 
-
+  
+  public DutyCycleOut turretDutyCycle;
+  boolean turretZeroed;
 
 
 /** Creates a new ExampleSubsystem. */
 public Shooter(ShooterConfig config) {
-  shooter1Motor = new TalonFX(config.kShooter1MotorCANID, "canivore");  //Create a motor for this subsystem
+  shooter1Motor = new TalonFX(ShooterConfig.kShooter1MotorCANID, "canivore");  //Create a motor for this subsystem
   this.configureMechanism(shooter1Motor, config.shooter1MotorConfig);
-  shooter2Motor = new TalonFX(config.kShooter2MotorCANID, "canivore");  //Create a motor for this subsystem
+  shooter2Motor = new TalonFX(ShooterConfig.kShooter2MotorCANID, "canivore");  //Create a motor for this subsystem
   this.configureMechanism(shooter2Motor, config.shooter2MotorConfig);
   shooterMotorMode = new VelocityVoltage(0);  //Set the motor's control mode
 
-  spindexerMotor = new TalonFX(config.kSpindexerMotorCANID, "canivore");  //Create a motor for this subsystem
+  spindexerMotor = new TalonFX(ShooterConfig.kSpindexerMotorCANID, "canivore");  //Create a motor for this subsystem
   spindexerMotorMode = new VelocityVoltage(0);  //Set the motor's control mode
   this.configureMechanism(spindexerMotor, config.spindexerMotorConfig);
 
-  kickupMotor = new TalonFX(config.kKickupMotorCANID, "canivore");  //Create a motor for this subsystem
+  kickupMotor = new TalonFX(ShooterConfig.kKickupMotorCANID, "canivore");  //Create a motor for this subsystem
   kickupMotorMode = new VelocityVoltage(0);  //Set the motor's control mode
   this.configureMechanism(kickupMotor, config.kickupMotorConfig);
    
-  turretMotor = new TalonFX(config.kTurretMotorCANID, "canivore");  //Create a motor for this subsystem
+  turretMotor = new TalonFX(ShooterConfig.kTurretMotorCANID, "canivore");  //Create a motor for this subsystem
   turretMotorMode = new PositionVoltage(0);  //Set the motor's control mode
   this.configureMechanism(turretMotor, config.turretMotorConfig);
     
-  hoodMotor = new TalonFX(config.kHoodMotorCANID, "canivore");  //Create a motor for this subsystem
+  hoodMotor = new TalonFX(ShooterConfig.kHoodMotorCANID, "canivore");  //Create a motor for this subsystem
   hoodMotorMode = new PositionVoltage(0);  //Set the motor's control mode
   this.configureMechanism(hoodMotor, config.hoodMotorConfig);
+
+  turretZeroed = true;
+  turretDutyCycle = new DutyCycleOut(0.0);
 
 }
 
@@ -91,7 +94,7 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config){
     }
   }
 
-  private void goToTurretPosition(double position) {
+  private void goToTurretPosition(Double position) {
     if (MotorEnableConstants.kTurretMotorEnabled) {
       if (position <= ShooterConstants.kTurretSafeClockwise //Check that Value is below extended distance 
       && position >= ShooterConstants.kTurretSafeCounterClockwise) { //Check that Value is above retracted distance
@@ -118,18 +121,39 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config){
       spindexerMotor.setControl(spindexerMotorMode.withVelocity(speed));
     }
   }
+ 
+  private void zeroTurret() {
+    turretMotor.setControl(turretDutyCycle.withOutput(ShooterConstants.kTurretZeroDutyCycle)); //set a low constant speed
+  }
   
+  private boolean isTurretAtZero() {
+    if (turretMotor.getStatorCurrent().getValueAsDouble() > ShooterConstants.kTurretZeroCurrentLimit) { //Check current draw for hard stop collision
+      turretZeroed=true;  //Turret zeroing is complete because we passed the current limit threshold
+      turretMotor.setPosition(ShooterConstants.kZeroPosition); //set the encoder position on the motor to whatever it should be
+      //Going to have to talk to trevor - how do we go "back" into tracking more turretMotor.setControl(.withOutput();      
+    }
+    return turretZeroed;  
+  }
+
+
+
   //====================Public Methods=====================
+	public Command reZeroTurret() {
+	  turretZeroed=false;
+	  return run(() -> {this.zeroTurret();})
+	    .until(isTurretZeroed);
+	}
 
+  public Command reverseSpindexer() {
+    return run(() -> {this.goToSpindexerSpeed(ShooterConstants.kSpindexerReverse);});
+  }
 
-
-
+  public Command reverseKickup() {
+    return run(() -> {this.goToKickupSpeed(ShooterConstants.kKickUpReverse);});
+  }
 
   //======================Triggers=========================
-
-
-
-
+  public Trigger isTurretZeroed = new Trigger(() -> {return this.isTurretAtZero();});
 
   @Override
   public void periodic() {

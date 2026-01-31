@@ -23,10 +23,12 @@ public class Intake extends SubsystemBase {
 
   IntakeConfig intakeConfig; //Create an object of type IntakeConfig
 
+  public String intakeState="stopped";
+
   //Constructor
   public Intake(IntakeConfig config) {
 
-    intakeMotor = new TalonFX(config.kIntakeCANID, "canivore");  //Create the intake motor for this subsystem
+    intakeMotor = new TalonFX(IntakeConfig.kIntakeCANID, "canivore");  //Create the intake motor for this subsystem
     intakeMotorMode = new VelocityVoltage(0);  //Set the motor's control mode
 
     this.configureMechanism(intakeMotor, config.intakeConfig);
@@ -51,13 +53,25 @@ public class Intake extends SubsystemBase {
 
   private void intake(){
     if (MotorEnableConstants.kIntakeMotorEnabled) {
-      intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kIntakeSpeed));
+      if (intakeState=="outtaking") {
+        intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kStopSpeed));
+        intakeState="stopped";
+      } else if (intakeState == "stopped") {
+        intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kIntakeSpeed));
+        intakeState="intaking";
+      }
     }
   }
   
   private void outtake(){
     if (MotorEnableConstants.kIntakeMotorEnabled) {
-      intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kIntakeSpeed));
+      if (intakeState == "intaking") {
+        intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kStopSpeed));
+        intakeState = "stopped";
+      } else if (intakeState=="stopped") {
+        intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kOuttakeSpeed));
+        intakeState="outtaking";
+      }
     }
   }
 
@@ -70,19 +84,19 @@ public class Intake extends SubsystemBase {
   //=============Public Methods==========================
   //=====================================================
   
-  public Command IntakeSuck() {
+  public Command intakeSuck() {
     return run(
       () -> {this.intake();}
     );
   }
 
-  public Command IntakeSpit() {
+  public Command intakeSpit() {
     return run(
       () -> {this.outtake();}
     );
   }
 
-    public Command IntakeStop() {
+    public Command intakeStop() {
     return run(
       () -> {this.stop();}
     );
