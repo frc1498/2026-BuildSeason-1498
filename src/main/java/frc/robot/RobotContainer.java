@@ -154,7 +154,7 @@ public class RobotContainer {
         //driver.povRight().
 
         //Driver X button
-        //driver.x().
+        driver.x().onTrue(shooter.setShooterOutputs());
 
         //Driver Y button
         //driver.y().

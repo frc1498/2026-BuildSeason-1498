@@ -66,6 +66,7 @@ public class Shooter extends SubsystemBase {
   private boolean shooterAtVelocity;
   private boolean kickupAtVelocity;
   private boolean spindexerAtVelocity;
+  private boolean readyToFire;
 
   private Supplier<SwerveDriveState> swerveStateSupplier;
   private double distanceToTarget;
@@ -285,6 +286,23 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
     return ((current >= (setpoint - deadBand)) && (current <= (setpoint + deadBand)));
   }  
 
+
+  /**
+   * Returns a string of the name of the currently running command.
+   * If no command is running, return "No Command".
+   * @return
+   */
+  private String getCurrentCommandName() {
+      if (this.getCurrentCommand() == null) {
+          return "No Command";
+      }
+      else {
+          return this.getCurrentCommand().getName();
+      }
+      // Refactoring this method with a ternary operator.
+      // return (this.getCurrentCommand == null) ? "No Command" : this.getCurrentCommand().getName();
+  }
+
   /*====================Public Methods=====================*/
 
   /**
@@ -308,10 +326,12 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
   public Trigger isShooterAtVelocity = new Trigger(() -> {return this.shooterAtVelocity;});
   public Trigger isKickupAtVelocity = new Trigger(() -> {return this.kickupAtVelocity;});
   public Trigger isSpindexerAtVelocity = new Trigger(() -> {return this.spindexerAtVelocity;});
+  public Trigger isReadyToFire = new Trigger(() -> {return this.readyToFire;});
 
 
   @Override
   public void initSendable(SendableBuilder builder) {
+    builder.addStringProperty("Command", this::getCurrentCommandName, null);
     builder.addDoubleProperty("Distance to Target", () -> {return this.distanceToTarget;}, null);
     builder.addDoubleProperty("Distance to Virtual Target", () -> {return this.distanceToVirtualTarget;}, null);
     builder.addDoubleProperty("Virtual Hood Angle", () -> {return this.virtualHoodAngle;}, null);
@@ -331,6 +351,9 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
     this.shooterAtVelocity = this.atSetpoint(this.desiredShooterVelocity, this.getShooterOneVelocity(), ShooterConstants.kShooterVelocityDeadband);
     this.kickupAtVelocity = this.atSetpoint(this.desiredKickupVelocity, this.getKickupSpeed(), ShooterConstants.kKickupVelocityDeadband);
     this.spindexerAtVelocity = this.atSetpoint(this.desiredSpindexerVelocity, this.getSpindexerVelocity(), ShooterConstants.kSpindexerVelocityDeadband);
+    
+    // Signal that we are ready to fire if the hood and turret are at position, and the shooter is at velocity.
+    this.readyToFire = this.hoodAtPosition && this.turretAtPosition && this.shooterAtVelocity;
 
     //First attempt of the shoot while moving calculation.
     this.distanceToTarget = ShotCalculation.getInstance().getTargetDistance(this.swerveStateSupplier.get().Pose, ShooterConstants.kRedHubCenter);
