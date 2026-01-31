@@ -7,11 +7,16 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.wpilibj.motorcontrol.PWMVictorSPX;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.config.ClimberConfig;
@@ -23,10 +28,16 @@ public class Climber extends SubsystemBase {
   public TalonFX liftClimbMotor;  //Motor type definition
   public TalonFX rotateClimb1Motor;  //Motor type definition
   public TalonFX rotateClimb2Motor;  //Motor type definition
+  public PWMVictorSPX pinReleaseMotor; //Motor type definition
 
   public PositionVoltage liftClimbMotorMode; //Motor control type definition
   public PositionVoltage rotateClimb1MotorMode; //Motor control type definition
   public PositionVoltage rotateClimb2MotorMode; //Motor control type definition
+
+  public DutyCycleOut dutyCycleOut; //Motor Control type definition
+
+  CANcoder hookRotateEncoder;
+  CANcoder liftEncoder;
 
   ClimberConfig climberConfig; //Create an object of type climber config to use to configure motors
 
@@ -34,20 +45,44 @@ public class Climber extends SubsystemBase {
   public Climber(ClimberConfig config) {
     rotateClimb1Motor = new TalonFX(ClimberConfig.kRotateClimb1MotorCANID, "canivore");  //Create a motor for this subsystem
     rotateClimb1MotorMode = new PositionVoltage(0);  //Set the motor's control mode
-
     this.configureMechanism(rotateClimb1Motor, config.rotateClimb1MotorConfig);
 
     rotateClimb2Motor = new TalonFX(ClimberConfig.kRotateClimb2MotorCANID, "canivore");  //Create a motor for this subsystem
     rotateClimb2MotorMode = new PositionVoltage(0);  //Set the motor's control mode
-
     this.configureMechanism(rotateClimb2Motor, config.rotateClimb2MotorConfig);
 
     liftClimbMotor = new TalonFX(ClimberConfig.kLiftClimbMotorCANID, "canivore");  //Create a motor for this subsystem
     liftClimbMotorMode = new PositionVoltage(0);  //Set the motor's control mode
-    
     this.configureMechanism(liftClimbMotor, config.liftClimbMotorConfig);
+
+    hookRotateEncoder = new CANcoder(ClimberConfig.kHookRotateEncoderCANID,"canivore");
+    this.configureCANcoder(hookRotateEncoder,config.hookRotateCANcoderConfig);
+
+    liftEncoder = new CANcoder(ClimberConfig.kLiftEncoderCANID,"canivore");
+    this.configureCANcoder(liftEncoder,config.liftCANcoderConfig);
+
+    pinReleaseMotor = new PWMVictorSPX(0);
+
+    dutyCycleOut = new DutyCycleOut(0.0);
+
   }
-  
+
+  //===================Configuration=====================
+  public void configureCANcoder(CANcoder cancoder, CANcoderConfiguration config){       
+
+        //Start Configuring Climber Motor
+        StatusCode cancoderRotateStatus = StatusCode.StatusCodeNotInitialized;
+
+        for(int i = 0; i < 5; ++i) {
+            cancoderRotateStatus = cancoder.getConfigurator().apply(config);
+            if (cancoderRotateStatus.isOK()) break;
+        }
+
+        if (!cancoderRotateStatus.isOK()) {
+            System.out.println("Could not configure device. Error: " + cancoderRotateStatus.toString());
+        }
+  }
+
   public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config){     
     //Start Configuring Hopper Motor
     StatusCode mechanismStatus = StatusCode.StatusCodeNotInitialized;
@@ -71,7 +106,7 @@ public class Climber extends SubsystemBase {
     }
   }
 
-    private void goToPositionRotateClimb(double position) {
+  private void goToPositionRotateClimb(double position) {
     if (MotorEnableConstants.kRotateClimb1MotorEnabled) {
       if (position <= ClimberConstants.kRotateClimbSafeExtend //Check that Value is below extended distance 
       && position >= ClimberConstants.kRotateClimbSafeRetract) { //Check that Value is above retracted distance
@@ -114,7 +149,40 @@ public class Climber extends SubsystemBase {
     && ((position + ClimberConstants.kRotateClimbDeadband) >= this.getRotateClimb2Position());
   }
 
+  private boolean isClimberReadyToClimb() {
+    return (this.isLiftClimbAtPosition(ClimberConstants.kLiftClimbExtend) &&
+    this.isRotateClimb1AtPosition(ClimberConstants.kRotateClimbExtend) &&
+    this.isRotateClimb2AtPosition(ClimberConstants.kRotateClimbExtend));
+  }
+
+  private boolean isClimberHome() {
+    return (this.isLiftClimbAtPosition(ClimberConstants.kLiftClimbHome) &&
+    this.isRotateClimb1AtPosition(ClimberConstants.kRotateClimbHome) &&
+    this.isRotateClimb2AtPosition(ClimberConstants.kRotateClimbHome));
+  }
+
+  private void releaseClimberPins() {
+    pinReleaseMotor.set(1);
+  }
+
+  private void extendClimberPins() {
+    pinReleaseMotor.set(-1);
+  }
+
+  private void rotateClimber1Stop(){
+    rotateClimb1Motor.setControl(dutyCycleOut.withOutput(0.0));
+  }
+
+  private void rotateClimber2Stop(){
+    rotateClimb2Motor.setControl(dutyCycleOut.withOutput(0.0));
+  }
+
+  private void liftClimberStop(){
+    liftClimbMotor.setControl(dutyCycleOut.withOutput(0.0));
+  }
+
 //=====================Public Methods====================
+  //=================Lift Climb Commands================
   public Command liftClimbExtend() {
     return run(
       () -> {this.goToPositionLiftClimb(ClimberConstants.kLiftClimbExtend);}
@@ -127,12 +195,31 @@ public class Climber extends SubsystemBase {
     ).until(isLiftClimbHandedOff);
   }
 
-  public Command LiftClimbRetract() {
+  public Command liftClimbRetract() {
     return run(
       () -> {this.goToPositionLiftClimb(ClimberConstants.kLiftClimbRetract);}
     ).until(isLiftClimbRetracted);
   }
 
+  public Command liftClimbHome() {
+    return run(
+      () -> {this.goToPositionLiftClimb(ClimberConstants.kLiftClimbHome);}
+    ).until(isLiftClimbHome);
+  }
+
+  public Command liftClimbStop() {
+    return run(
+      () -> {this.liftClimberStop();}
+    );
+  }
+
+  public Command liftClimbPastHandoff(){
+    return run(
+      () -> {this.goToPositionLiftClimb(ClimberConstants.kLiftClimbRetract);}
+      ).until(isLiftClimbHandedOff);
+  }
+
+  //===============Climb 1 Commands================
   public Command rotateClimb1Extend() {
     return run(
       () -> {this.goToPositionRotateClimb(ClimberConstants.kRotateClimbExtend);}
@@ -150,6 +237,19 @@ public class Climber extends SubsystemBase {
     ).until(isRotateClimb1Retracted);
   }
 
+  public Command rotateClimb1Home() {
+    return run(
+      () -> {this.goToPositionRotateClimb(ClimberConstants.kRotateClimbHome);}
+    ).until(isRotateClimb1Home);
+  }  
+
+  public Command rotateClimb1Stop() {
+    return run(
+      () -> {this.rotateClimber1Stop();}
+    );
+  }
+
+  //====================Climb 2 Commands===============
   public Command rotateClimb2Extend() {
     return run(
       () -> {this.goToPositionRotateClimb(ClimberConstants.kRotateClimbExtend);}
@@ -167,19 +267,47 @@ public class Climber extends SubsystemBase {
     ).until(isRotateClimb1Retracted);
   }
 
-//=======================Triggers======================
-public Trigger isLiftClimbExtended = new Trigger(() -> {return this.isLiftClimbAtPosition(ClimberConstants.kLiftClimbExtend);});
-public Trigger isLiftClimbHandedOff = new Trigger(() -> {return this.isLiftClimbAtPosition(ClimberConstants.kLiftClimbHandOff);});
-public Trigger isLiftClimbRetracted = new Trigger(() -> {return this.isLiftClimbAtPosition(ClimberConstants.kLiftClimbRetract);});
+  public Command rotateClimb2Home() {
+    return run(
+      () -> {this.goToPositionRotateClimb(ClimberConstants.kRotateClimbHome);}
+    ).until(isRotateClimb1Home);
+  }
 
-public Trigger isRotateClimb1Extended = new Trigger(() -> {return this.isRotateClimb1AtPosition(ClimberConstants.kRotateClimbExtend);});
-public Trigger isRotateClimb1HandedOff = new Trigger(() -> {return this.isRotateClimb1AtPosition(ClimberConstants.kRotateClimbHandOff);});
-public Trigger isRotateClimb1Retracted = new Trigger(() -> {return this.isRotateClimb1AtPosition(ClimberConstants.kRotateClimbRetract);});
+  public Command rotateClimb2Stop() {
+    return run(
+      () -> {this.rotateClimber2Stop();}
+    );
+  }
 
-public Trigger isRotateClimb2Extended = new Trigger(() -> {return this.isRotateClimb2AtPosition(ClimberConstants.kRotateClimbExtend);});
-public Trigger isRotateClimb2HandedOff = new Trigger(() -> {return this.isRotateClimb2AtPosition(ClimberConstants.kRotateClimbHandOff);});
-public Trigger isRotateClimb2Retracted = new Trigger(() -> {return this.isRotateClimb2AtPosition(ClimberConstants.kRotateClimbRetract);});
+  //===================Pin Commands========================
+  public Command releasePins() {
+    return run(
+      () -> {this.releaseClimberPins();});
+  }
 
+
+
+
+
+
+  //=======================Triggers======================
+  public Trigger isLiftClimbExtended = new Trigger(() -> {return this.isLiftClimbAtPosition(ClimberConstants.kLiftClimbExtend);});
+  public Trigger isLiftClimbHandedOff = new Trigger(() -> {return this.isLiftClimbAtPosition(ClimberConstants.kLiftClimbHandOff);});
+  public Trigger isLiftClimbRetracted = new Trigger(() -> {return this.isLiftClimbAtPosition(ClimberConstants.kLiftClimbRetract);});
+  public Trigger isLiftClimbHome = new Trigger(() -> {return this.isLiftClimbAtPosition(ClimberConstants.kLiftClimbHome);});
+
+  public Trigger isRotateClimb1Extended = new Trigger(() -> {return this.isRotateClimb1AtPosition(ClimberConstants.kRotateClimbExtend);});
+  public Trigger isRotateClimb1HandedOff = new Trigger(() -> {return this.isRotateClimb1AtPosition(ClimberConstants.kRotateClimbHandOff);});
+  public Trigger isRotateClimb1Retracted = new Trigger(() -> {return this.isRotateClimb1AtPosition(ClimberConstants.kRotateClimbRetract);});
+  public Trigger isRotateClimb1Home = new Trigger(() -> {return this.isRotateClimb1AtPosition(ClimberConstants.kRotateClimbHome);});
+
+  public Trigger isRotateClimb2Extended = new Trigger(() -> {return this.isRotateClimb2AtPosition(ClimberConstants.kRotateClimbExtend);});
+  public Trigger isRotateClimb2HandedOff = new Trigger(() -> {return this.isRotateClimb2AtPosition(ClimberConstants.kRotateClimbHandOff);});
+  public Trigger isRotateClimb2Retracted = new Trigger(() -> {return this.isRotateClimb2AtPosition(ClimberConstants.kRotateClimbRetract);});
+  public Trigger isRotateClimb2Home = new Trigger(() -> {return this.isRotateClimb2AtPosition(ClimberConstants.kRotateClimbHome);});
+
+  public Trigger isClimberReadyToClimb = new Trigger(() -> {return this.isClimberReadyToClimb();});
+  public Trigger isClimberHome = new Trigger (() -> {return this.isClimberHome();});
 
   @Override
   public void periodic() {

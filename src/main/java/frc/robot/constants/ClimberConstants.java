@@ -17,11 +17,12 @@ public class ClimberConstants {
   public static final int kLiftClimbExtend = 0;
   public static final int kLiftClimbHandOff = 0;
   public static final int kLiftClimbRetract = 0;
+  public static final int kLiftClimbHome = 0;
 
   public static final int kRotateClimbExtend = 0;
   public static final int kRotateClimbHandOff = 0;
   public static final int kRotateClimbRetract = 0;
-
+  public static final int kRotateClimbHome = 0;
   public static final int kLiftClimbDeadband = 0;
   public static final int kRotateClimbDeadband = 0;
 

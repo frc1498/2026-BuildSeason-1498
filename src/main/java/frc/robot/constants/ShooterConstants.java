@@ -14,11 +14,18 @@ package frc.robot.constants;
  */
 public class ShooterConstants {
 
+public static final double kTurretZeroDutyCycle=0.0;
+public static final int kTurretZeroCurrentLimit=0;
+public static final int kZeroPosition=0;
+
   //==============Positions=================
 
   //===============Speeds===================
-  public static final int kKickUpIntake=0;
-  public static final int kKickUpOuttake=0;
+  public static final double kKickUpForward=0;
+  public static final double kKickUpReverse=0;
+
+  public static final double kSpindexerForward=0;
+  public static final double kSpindexerReverse=0;
 
   //===============Safeties==================
   public static final int kHoodSafeExtend = 0;

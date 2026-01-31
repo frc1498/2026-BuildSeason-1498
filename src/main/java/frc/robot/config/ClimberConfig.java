@@ -1,20 +1,27 @@
 package frc.robot.config;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 public class ClimberConfig {
     //Constants go here
     public static final int kLiftClimbMotorCANID=0;
     public static final int kRotateClimb1MotorCANID=0;
     public static final int kRotateClimb2MotorCANID=0;
+    public static final int kLiftEncoderCANID=0;
+    public static final int kHookRotateEncoderCANID=0;
 
     //Variables
     public TalonFXConfiguration liftClimbMotorConfig;
     public TalonFXConfiguration rotateClimb1MotorConfig;
     public TalonFXConfiguration rotateClimb2MotorConfig;
+    public CANcoderConfiguration hookRotateCANcoderConfig;
+    public CANcoderConfiguration liftCANcoderConfig;
+
 
     //Constructor
     public ClimberConfig(){
@@ -27,10 +34,27 @@ public class ClimberConfig {
         rotateClimb2MotorConfig = new TalonFXConfiguration();  //Instantiate - make a framework
         this.configureRotateClimber2(rotateClimb2MotorConfig);  //Fill in framework 
 
+        hookRotateCANcoderConfig = new CANcoderConfiguration();
+        this.configureHookRotateCANcoder(hookRotateCANcoderConfig);
+
+        liftCANcoderConfig = new CANcoderConfiguration();
+        this.configureLiftCANcoder(liftCANcoderConfig);
+    }
+    
+    public void configureHookRotateCANcoder(CANcoderConfiguration CANcoderConfig){
+        CANcoderConfig.MagnetSensor.MagnetOffset = 0;
+        CANcoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
+        CANcoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
+    }
+
+    public void configureLiftCANcoder(CANcoderConfiguration CANcoderConfig){
+        CANcoderConfig.MagnetSensor.MagnetOffset = 0;
+        CANcoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
+        CANcoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
     }
 
     public void configureLiftClimber(TalonFXConfiguration liftClimber){
-//configure motor
+        //configure motor
         liftClimber.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         liftClimber.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         liftClimber.MotorOutput.PeakForwardDutyCycle = 1;
@@ -60,7 +84,7 @@ public class ClimberConfig {
     }
 
     public void configureRotateClimber1(TalonFXConfiguration rotateClimber){
-     //configure motor
+        //configure motor
         rotateClimber.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         rotateClimber.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         rotateClimber.MotorOutput.PeakForwardDutyCycle = 1;
@@ -90,7 +114,7 @@ public class ClimberConfig {
     }
 
     public void configureRotateClimber2(TalonFXConfiguration rotateClimber){
-     //configure motor
+        //configure motor
         rotateClimber.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         rotateClimber.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         rotateClimber.MotorOutput.PeakForwardDutyCycle = 1;
