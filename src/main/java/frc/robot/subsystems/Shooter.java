@@ -13,6 +13,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import dev.doglog.DogLog;
@@ -25,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.ShotCalculation;
 import frc.robot.config.ShooterConfig;
+import frc.robot.sim.ShooterSim;
 import frc.robot.constants.MotorEnableConstants;
 import frc.robot.constants.ShooterConstants;
 import frc.robot.constants.ShooterConstants.ShooterFault;
@@ -75,6 +77,14 @@ public class Shooter extends SubsystemBase {
   private double virtualHoodAngle;
   private double virtualFlywheelVelocity;
   private double virtualTurretAngle;
+
+  private ShooterSim sim;
+  private TalonFXSimState shooter1MotorSim;
+  private TalonFXSimState shooter2MotorSim;
+  private TalonFXSimState spindexerMotorSim;
+  private TalonFXSimState kickupMotorSim;
+  private TalonFXSimState turretMotorSim;
+  private TalonFXSimState hoodMotorSim;
 
   public Field2d targetingField = new Field2d();
 
@@ -156,6 +166,23 @@ public Shooter(ShooterConfig config, Supplier<SwerveDriveState> swerveDriveState
   this.hoodMotor = new TalonFX(this.shooterConfig.kHoodMotorCANID, "canivore");            // Create hood adjustment motor.
   this.hoodMotorMode = new PositionVoltage(0);                                           // Set the contorl mode for the adjustment motor.
   this.configureMechanism(this.hoodMotor, this.shooterConfig.hoodMotorConfig);
+
+  this.shooter1MotorSim = this.shooter1Motor.getSimState();
+  this.shooter2MotorSim = this.shooter2Motor.getSimState();
+  this.spindexerMotorSim = this.spindexerMotor.getSimState();
+  this.kickupMotorSim = this.kickupMotor.getSimState();
+  this.turretMotorSim = this.turretMotor.getSimState();
+  this.hoodMotorSim = this.hoodMotor.getSimState();
+
+  this.sim = new ShooterSim(
+    this.shooterConfig,
+    this.shooter1MotorSim,
+    this.shooter2MotorSim,
+    this.spindexerMotorSim,
+    this.kickupMotorSim,
+    this.turretMotorSim,
+    this.hoodMotorSim
+    );
 
   // Publish subsystem data to SmartDashboard.
   SmartDashboard.putData("Shooter", this);
@@ -431,5 +458,6 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
   @Override
   public void simulationPeriodic() {
     // This method will be called once per scheduler run during simulation
+    this.sim.simulationPeriodic();
   }
 }

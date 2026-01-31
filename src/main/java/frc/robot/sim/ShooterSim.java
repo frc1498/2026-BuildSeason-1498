@@ -7,6 +7,10 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismObject2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import frc.robot.config.ShooterConfig;
 import frc.robot.constants.ShooterConstants;
 
@@ -50,6 +54,11 @@ public class ShooterSim implements AutoCloseable {
     public double simVoltage;
     public double simPeriod = 0.02;
 
+    public Mechanism2d shooter_vis;
+    public MechanismRoot2d shooter_root;
+    public MechanismObject2d shooter_turret;
+    public MechanismLigament2d shooter_hood;
+
      /*new DCMotorSim(LinearSystemId.createDCMotorSystem(gearbox, 0.001, 100.0), gearbox);*/
     public ShooterSim(ShooterConfig config, TalonFXSimState hood, TalonFXSimState turret, TalonFXSimState shooterOne, TalonFXSimState shooterTwo, TalonFXSimState spindexer, TalonFXSimState kickup) {
         this.shooterConfig = config;
@@ -69,6 +78,10 @@ public class ShooterSim implements AutoCloseable {
         this.turretRotateSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(this.turretRotate, 0.001, ShooterConstants.kTurretGearing), this.turretRotate);
         this.spindexerRotateSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(this.spindexerRotate, 0.001, ShooterConstants.kSpindexerGearing), this.spindexerRotate);
         this.kickupRotateSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(this.kickupRotate, 0.001, ShooterConstants.kKickupGearing), this.kickupRotate);
+    
+        this.shooter_vis = new Mechanism2d(20.0, 20.0);
+        this.shooter_root = this.shooter_vis.getRoot("Origin", 10.0, 10.0);
+        this.shooter_hood = shooter_root.append(new MechanismLigament2d("Hood", 0.0, 0.0));
     }
 
     public void simulationPeriodic() {
@@ -97,7 +110,7 @@ public class ShooterSim implements AutoCloseable {
         this.kickupRotateSim.setInput(kickup.getMotorVoltage());
         this.kickupRotateSim.update(this.simPeriod);
 
-        // Update sensor positions
+        // Update sensor positions.
         this.flywheelVelocity = this.outputRPMToInputRPS(this.shooterFlywheel.getAngularVelocityRPM(), ShooterConstants.kShooterFlywheelGearing);
         this.flywheelPosition = this.flywheelVelocity * this.simPeriod;
         this.shooterOne.setRotorVelocity(this.flywheelVelocity);
@@ -126,6 +139,8 @@ public class ShooterSim implements AutoCloseable {
         // Divide by 60 for rotations per second.
         // Multiply by simPeriod for rotation delta for this loop.
         // Divide by the gear ratio to convert the output to the input.
+
+        this.shooter_hood.setLength((this.flywheelVelocity / ShooterConstants.kShooterMaxSpeed * 10.0));
 
     }
 

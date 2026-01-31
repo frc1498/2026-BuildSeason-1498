@@ -47,7 +47,7 @@ public class ShooterConstants {
   public static final int kKickupMinSpeed = 0;
 
   /* Simulation Constants */
-  public static final double kShooterFlywheelGearing = 1.0;
+  public static final double kShooterFlywheelGearing = 1.0; // 1 output : 1 input
   public static final double kHoodGearing = 1.0;
   public static final double kTurretGearing = 1.0;
   public static final double kSpindexerGearing = 1.0;
