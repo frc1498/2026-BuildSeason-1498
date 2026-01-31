@@ -1,13 +1,20 @@
 package frc.robot.commands;
 
 import java.util.function.Supplier;
+import java.util.Optional;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.math.geometry.Pose2d;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Hopper;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.constants.ClimberConstants;
+
 
 public class Move {
 
@@ -15,12 +22,15 @@ public class Move {
     public Climber climber;
     public Intake intake;
     public Shooter shooter;
+    public CommandSwerveDrivetrain drivetrain;
+    public Optional<Alliance> ally;
 
     public Move(Climber climber, Hopper hopper, Intake intake, Shooter shooter) {
         this.intake = intake;
         this.climber = climber;
         this.intake = intake;
         this.shooter = shooter;
+        this.drivetrain = drivetrain;
     }
 
     //==========================================================
@@ -30,6 +40,17 @@ public class Move {
     //==========================================================
     //======================Private=============================
     //==========================================================
+    private int getAlliance() {
+        if (ally.isPresent()) {
+            if (ally.get() == Alliance.Blue) {
+                return 0;
+            }
+            else if (ally.get() == Alliance.Red) {
+                return 1;
+            }
+        }
+        return 0;
+    }
 
     //==========================================================
     //=====================Commands=============================
@@ -53,18 +74,21 @@ public class Move {
     public Command stopClimb() {
         return Commands.parallel(climber.rotateClimb1Stop(),climber.rotateClimb2Stop(),climber.liftClimbStop());
     }
-
-    /*
-    public Command quickClimbRight() {//Drives to the right climb location, does this happen here or
-        //return;
+        
+    public Command quickClimbRight() {//Drives to the right climb location
+        return drivetrain.pathPlannerToPose(() -> {
+            int allianceIndex = getAlliance();
+            return ClimberConstants.quickClimbPoses[allianceIndex][1];
+        });
     }
-    */
-
-    /*
+    
     public Command quickClimbLeft() {//Drives to the left climb location
-        //return;
+        return drivetrain.pathPlannerToPose(() -> {
+            int allianceIndex = getAlliance();
+            return ClimberConstants.quickClimbPoses[allianceIndex][0];
+        });
     }
-    */
+    
 
     /*
     public Command emptyHopper() {
