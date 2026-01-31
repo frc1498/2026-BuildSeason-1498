@@ -21,30 +21,30 @@ public class ShooterConstants {
   /*==============Positions=================*/
 
   /*===============Speeds===================*/
-  public static final double kKickupIntake = 10;
-  public static final double kKickupOuttake = -10;
-  public static final double kSpindexerIntake = 10;
-  public static final double kSpindexerOuttake = -10;
+  public static final double kKickupIntake = 10.0;
+  public static final double kKickupOuttake = -10.0;
+  public static final double kSpindexerIntake = 10.0;
+  public static final double kSpindexerOuttake = -10.0;
 
   /* Deadbands */
-  public static final double kHoodPositionDeadband = 0;
-  public static final double kTurretPositionDeadband = 0;
-  public static final double kShooterVelocityDeadband = 0;
-  public static final double kKickupVelocityDeadband = 0;
-  public static final double kSpindexerVelocityDeadband = 0;
+  public static final double kHoodPositionDeadband = 5.0;
+  public static final double kTurretPositionDeadband = 5.0;
+  public static final double kShooterVelocityDeadband = 20.0;
+  public static final double kKickupVelocityDeadband = 20.0;
+  public static final double kSpindexerVelocityDeadband = 20.0;
 
   /*===============Safeties==================*/
-  public static final int kHoodSafeExtend = 0;
-  public static final int kHoodSafeRetract = 0;
+  public static final double kHoodSafeExtend = 90.0;
+  public static final double kHoodSafeRetract = 0.0;
   
-  public static final int kTurretSafeClockwise = 0;
-  public static final int kTurretSafeCounterClockwise = 0;
+  public static final double kTurretSafeClockwise = 270.0;
+  public static final double kTurretSafeCounterClockwise = -270.0;
 
-  public static final int kShooterMaxSpeed = 0;
-  public static final int kShooterMinSpeed = 0;
+  public static final double kShooterMaxSpeed = 100.0;
+  public static final double kShooterMinSpeed = -100.0;
 
-  public static final int kKickupMaxSpeed = 0;
-  public static final int kKickupMinSpeed = 0;
+  public static final double kKickupMaxSpeed = 500.0;
+  public static final double kKickupMinSpeed = -50.0;
 
   /* Simulation Constants */
   public static final double kShooterFlywheelGearing = 1.0; // 1 output : 1 input
@@ -81,13 +81,13 @@ public class ShooterConstants {
     hoodAngleMap.put(3.5, 35.0);
     hoodAngleMap.put(4.0, 35.0);
 
-    flywheelSpeedMap.put(0.5, 800.0);
-    flywheelSpeedMap.put(1.0, 825.0);
-    flywheelSpeedMap.put(2.0, 875.0);
-    flywheelSpeedMap.put(2.5, 900.0);
-    flywheelSpeedMap.put(3.0, 935.0);
-    flywheelSpeedMap.put(3.5, 950.0);
-    flywheelSpeedMap.put(4.0, 975.0);
+    flywheelSpeedMap.put(0.5, 50.0);
+    flywheelSpeedMap.put(1.0, 55.0);
+    flywheelSpeedMap.put(2.0, 62.0);
+    flywheelSpeedMap.put(2.5, 68.0);
+    flywheelSpeedMap.put(3.0, 75.0);
+    flywheelSpeedMap.put(3.5, 88.0);
+    flywheelSpeedMap.put(4.0, 100.0);
 
     timeOfFlightMap.put(0.5, 0.6);
     timeOfFlightMap.put(1.0, 0.63);

@@ -10,12 +10,12 @@
         {
           "decKey": 65,
           "incKey": 68,
-          "maxAbsValue": 0.20000000298023224
+          "maxAbsValue": 0.75
         },
         {
           "decKey": 87,
           "incKey": 83,
-          "maxAbsValue": 0.20000000298023224
+          "maxAbsValue": 0.75
         },
         {
           "decayRate": 0.0,

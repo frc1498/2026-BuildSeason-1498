@@ -78,6 +78,10 @@ public class Shooter extends SubsystemBase {
   private double virtualFlywheelVelocity;
   private double virtualTurretAngle;
 
+  private double currentHoodAngle;
+  private double currentTurretAngle;
+  private double currentFlywheelVelocity;
+
   private ShooterSim sim;
   private TalonFXSimState shooter1MotorSim;
   private TalonFXSimState shooter2MotorSim;
@@ -176,17 +180,18 @@ public Shooter(ShooterConfig config, Supplier<SwerveDriveState> swerveDriveState
 
   this.sim = new ShooterSim(
     this.shooterConfig,
+    this.hoodMotorSim,
+    this.turretMotorSim,
     this.shooter1MotorSim,
     this.shooter2MotorSim,
     this.spindexerMotorSim,
-    this.kickupMotorSim,
-    this.turretMotorSim,
-    this.hoodMotorSim
+    this.kickupMotorSim
     );
 
   // Publish subsystem data to SmartDashboard.
   SmartDashboard.putData("Shooter", this);
   SmartDashboard.putData("Shooter/Pose", this.targetingField);
+  SmartDashboard.putData("Shooter/Sim", this.sim.getVis());
 }
 
 /**
@@ -425,6 +430,9 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
     builder.addDoubleProperty("Desired Shooter Velocity", () -> {return this.desiredShooterVelocity;}, null);
     builder.addDoubleProperty("Desired Spindexer Velocity", () -> {return this.desiredSpindexerVelocity;}, null);
     builder.addDoubleProperty("Desired Kickup Velocity", () -> {return this.desiredKickupVelocity;}, null);
+    builder.addDoubleProperty("Current Turret Angle", () -> {return this.currentTurretAngle;}, null);
+    builder.addDoubleProperty("Current Hood Angle", () -> {return this.currentHoodAngle;}, null);
+    builder.addDoubleProperty("Current Flywheel Velocity", () -> {return this.currentFlywheelVelocity;}, null);
   }
 
   @Override
@@ -436,6 +444,10 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
     this.shooterAtVelocity = this.atSetpoint(this.desiredShooterVelocity, this.getShooterOneVelocity(), ShooterConstants.kShooterVelocityDeadband);
     this.kickupAtVelocity = this.atSetpoint(this.desiredKickupVelocity, this.getKickupSpeed(), ShooterConstants.kKickupVelocityDeadband);
     this.spindexerAtVelocity = this.atSetpoint(this.desiredSpindexerVelocity, this.getSpindexerVelocity(), ShooterConstants.kSpindexerVelocityDeadband);
+
+    this.currentHoodAngle = this.getHoodPosition();
+    this.currentTurretAngle = this.getTurretPosition();
+    this.currentFlywheelVelocity = this.getShooterOneVelocity();
     
     // Signal that we are ready to fire if the hood and turret are at position, and the shooter is at velocity.
     this.readyToFire = this.hoodAtPosition && this.turretAtPosition && this.shooterAtVelocity;
@@ -459,5 +471,6 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
   public void simulationPeriodic() {
     // This method will be called once per scheduler run during simulation
     this.sim.simulationPeriodic();
+    this.sim.updateShooterHoodVis(this.currentFlywheelVelocity, this.currentHoodAngle);
   }
 }

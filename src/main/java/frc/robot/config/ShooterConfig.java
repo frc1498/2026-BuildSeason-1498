@@ -7,12 +7,12 @@ import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
 public class ShooterConfig {
     //Constants go Here
-    public static final int kShooter1MotorCANID = 0;
-    public static final int kShooter2MotorCANID = 0;
-    public static final int kHoodMotorCANID = 0;
-    public static final int kTurretMotorCANID = 0;
-    public static final int kSpindexerMotorCANID = 0;
-    public static final int kKickupMotorCANID = 0;
+    public static final int kShooter1MotorCANID = 10;
+    public static final int kShooter2MotorCANID = 11;
+    public static final int kHoodMotorCANID = 12;
+    public static final int kTurretMotorCANID = 13;
+    public static final int kSpindexerMotorCANID = 14;
+    public static final int kKickupMotorCANID = 15;
    
     //Variables
     public TalonFXConfiguration hoodMotorConfig; //x44 motor
@@ -58,7 +58,7 @@ public class ShooterConfig {
         hood.CurrentLimits.SupplyCurrentLowerTime = 1;
 
         //Slot 0 Config
-        hood.Slot0.kP = 0;  // An error of 1 rotation per second results in 2V output
+        hood.Slot0.kP = 0.3;  // An error of 1 rotation per second results in 2V output
         hood.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
         hood.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
         hood.Slot0.kS = 0;
@@ -87,7 +87,7 @@ public class ShooterConfig {
         shooter1.CurrentLimits.SupplyCurrentLowerTime = 1;
 
         //Slot 0 Configs
-        shooter1.Slot0.kP = 0;  // An error of 1 rotation per second results in 2V output
+        shooter1.Slot0.kP = 0.3;  // An error of 1 rotation per second results in 2V output
         shooter1.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
         shooter1.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
         shooter1.Slot0.kS = 0;
@@ -118,7 +118,7 @@ public class ShooterConfig {
         shooter2.CurrentLimits.SupplyCurrentLowerTime = 1;
 
         //Slot 0 Configs
-        shooter2.Slot0.kP = 0;  // An error of 1 rotation per second results in 2V output
+        shooter2.Slot0.kP = 0.3;  // An error of 1 rotation per second results in 2V output
         shooter2.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
         shooter2.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
         shooter2.Slot0.kS = 0;
@@ -149,7 +149,7 @@ public class ShooterConfig {
         turret.CurrentLimits.SupplyCurrentLowerTime = 1;
 
         //Slot 0 Configs
-        turret.Slot0.kP = 0;  // An error of 1 rotation per second results in 2V output
+        turret.Slot0.kP = 0.3;  // An error of 1 rotation per second results in 2V output
         turret.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
         turret.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
         turret.Slot0.kS = 0;
@@ -178,7 +178,7 @@ public class ShooterConfig {
         turret.CurrentLimits.SupplyCurrentLowerTime = 1;
 
         //Slot 0 Configs
-        turret.Slot0.kP = 0;  // An error of 1 rotation per second results in 2V output
+        turret.Slot0.kP = 0.3;  // An error of 1 rotation per second results in 2V output
         turret.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
         turret.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
         turret.Slot0.kS = 0;
@@ -207,7 +207,7 @@ public class ShooterConfig {
         turret.CurrentLimits.SupplyCurrentLowerTime = 1;
 
         //Slot 0 Configs
-        turret.Slot0.kP = 0;  // An error of 1 rotation per second results in 2V output
+        turret.Slot0.kP = 0.3;  // An error of 1 rotation per second results in 2V output
         turret.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
         turret.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
         turret.Slot0.kS = 0;

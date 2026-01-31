@@ -71,8 +71,7 @@ public class ShooterSim implements AutoCloseable {
 
         this.shooterFlywheel = new FlywheelSim(
             LinearSystemId.createFlywheelSystem(this.shooterGearbox, 0.001, ShooterConstants.kShooterFlywheelGearing),
-            this.shooterGearbox,
-             null
+            this.shooterGearbox
         );
         this.hoodAdjustSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(this.hoodAdjust, 0.001, ShooterConstants.kHoodGearing), this.hoodAdjust);
         this.turretRotateSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(this.turretRotate, 0.001, ShooterConstants.kTurretGearing), this.turretRotate);
@@ -95,7 +94,7 @@ public class ShooterSim implements AutoCloseable {
         this.kickup.setSupplyVoltage(this.simVoltage);
 
         // Run the simulation and update it.
-        this.shooterFlywheel.setInput(this.shooterOne.getMotorVoltage(), this.shooterTwo.getMotorVoltage());
+        this.shooterFlywheel.setInput(shooterOne.getMotorVoltage());
         this.shooterFlywheel.update(this.simPeriod);
 
         this.hoodAdjustSim.setInput(hood.getMotorVoltage());
@@ -140,7 +139,7 @@ public class ShooterSim implements AutoCloseable {
         // Multiply by simPeriod for rotation delta for this loop.
         // Divide by the gear ratio to convert the output to the input.
 
-        this.shooter_hood.setLength((this.flywheelVelocity / ShooterConstants.kShooterMaxSpeed * 10.0));
+        //this.shooter_hood.setLength((this.flywheelVelocity / ShooterConstants.kShooterMaxSpeed * 10.0));
 
     }
 
@@ -152,6 +151,15 @@ public class ShooterSim implements AutoCloseable {
      */
     private double outputRPMToInputRPS(double velocity, double gearRatio) {
         return (velocity / 60.0) / gearRatio;
+    }
+
+    public Mechanism2d getVis() {
+        return this.shooter_vis;
+    }
+
+    public void updateShooterHoodVis(double velocity, double angle) {
+        this.shooter_hood.setLength((velocity / ShooterConstants.kShooterMaxSpeed) * 10.0);
+        this.shooter_hood.setAngle(angle);
     }
 
     @Override
