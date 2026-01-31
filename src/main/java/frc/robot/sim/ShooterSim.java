@@ -6,7 +6,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import frc.robot.config.ShooterConfig;
 import frc.robot.constants.ShooterConstants;
 
@@ -32,6 +32,24 @@ public class ShooterSim implements AutoCloseable {
     public DCMotorSim spindexerRotateSim;
     public DCMotorSim kickupRotateSim;
 
+    private double flywheelVelocity;
+    private double flywheelPosition;
+
+    private double hoodVelocity;
+    private double hoodPosition;
+
+    private double turretVelocity;
+    private double turretPosition;
+
+    private double spindexerVelocity;
+    private double spindexerPosition;
+
+    private double kickupVelocity;
+    private double kickupPosition;
+
+    public double simVoltage;
+    public double simPeriod = 0.02;
+
      /*new DCMotorSim(LinearSystemId.createDCMotorSystem(gearbox, 0.001, 100.0), gearbox);*/
     public ShooterSim(ShooterConfig config, TalonFXSimState hood, TalonFXSimState turret, TalonFXSimState shooterOne, TalonFXSimState shooterTwo, TalonFXSimState spindexer, TalonFXSimState kickup) {
         this.shooterConfig = config;
@@ -53,7 +71,75 @@ public class ShooterSim implements AutoCloseable {
         this.kickupRotateSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(this.kickupRotate, 0.001, ShooterConstants.kKickupGearing), this.kickupRotate);
     }
 
-     @Override
+    public void simulationPeriodic() {
+        // Set motor and sensor voltage.
+        this.simVoltage = RoboRioSim.getVInVoltage();
+        this.hood.setSupplyVoltage(this.simVoltage);
+        this.turret.setSupplyVoltage(this.simVoltage);
+        this.shooterOne.setSupplyVoltage(this.simVoltage);
+        this.shooterTwo.setSupplyVoltage(this.simVoltage);
+        this.spindexer.setSupplyVoltage(this.simVoltage);
+        this.kickup.setSupplyVoltage(this.simVoltage);
+
+        // Run the simulation and update it.
+        this.shooterFlywheel.setInput(this.shooterOne.getMotorVoltage(), this.shooterTwo.getMotorVoltage());
+        this.shooterFlywheel.update(this.simPeriod);
+
+        this.hoodAdjustSim.setInput(hood.getMotorVoltage());
+        this.hoodAdjustSim.update(this.simPeriod);
+
+        this.turretRotateSim.setInput(turret.getMotorVoltage());
+        this.turretRotateSim.update(this.simPeriod);
+
+        this.spindexerRotateSim.setInput(spindexer.getMotorVoltage());
+        this.spindexerRotateSim.update(this.simPeriod);
+
+        this.kickupRotateSim.setInput(kickup.getMotorVoltage());
+        this.kickupRotateSim.update(this.simPeriod);
+
+        // Update sensor positions
+        this.flywheelVelocity = this.outputRPMToInputRPS(this.shooterFlywheel.getAngularVelocityRPM(), ShooterConstants.kShooterFlywheelGearing);
+        this.flywheelPosition = this.flywheelVelocity * this.simPeriod;
+        this.shooterOne.setRotorVelocity(this.flywheelVelocity);
+        this.shooterOne.addRotorPosition(this.flywheelPosition);
+
+        this.hoodVelocity = this.outputRPMToInputRPS(this.hoodAdjustSim.getAngularVelocityRPM(), ShooterConstants.kHoodGearing);
+        this.hoodPosition = this.hoodVelocity * this.simPeriod;
+        this.hood.setRotorVelocity(this.hoodVelocity);
+        this.hood.addRotorPosition(this.hoodPosition);
+
+        this.turretVelocity = this.outputRPMToInputRPS(this.turretRotateSim.getAngularVelocityRPM(), ShooterConstants.kTurretGearing);
+        this.turretPosition = this.turretVelocity * this.simPeriod;
+        this.turret.setRotorVelocity(this.turretVelocity);
+        this.turret.addRotorPosition(this.turretPosition);
+
+        this.spindexerVelocity = this.outputRPMToInputRPS(this.spindexerRotateSim.getAngularVelocityRPM(), ShooterConstants.kSpindexerGearing);
+        this.spindexerPosition = this.spindexerVelocity * this.simPeriod;
+        this.spindexer.setRotorVelocity(this.spindexerVelocity);
+        this.spindexer.addRotorPosition(this.spindexerPosition);
+        
+        this.kickupVelocity = this.outputRPMToInputRPS(this.kickupRotateSim.getAngularVelocityRPM(), ShooterConstants.kKickupGearing);
+        this.kickupPosition = this.kickupVelocity * this.simPeriod;
+        this.kickup.setRotorVelocity(this.kickupVelocity);
+        this.kickup.addRotorPosition(this.kickupPosition);
+
+        // Divide by 60 for rotations per second.
+        // Multiply by simPeriod for rotation delta for this loop.
+        // Divide by the gear ratio to convert the output to the input.
+
+    }
+
+    /**
+     * Converts the simulated output velocity to the simulated input velocity.
+     * @param velocity - The output velocity, in rotations per minute.
+     * @param gearRatio - The gear ratio of the mechanism.
+     * @return - The velocity of the input, in rotations per second.
+     */
+    private double outputRPMToInputRPS(double velocity, double gearRatio) {
+        return (velocity / 60.0) / gearRatio;
+    }
+
+    @Override
     public void close() {
 
     }
