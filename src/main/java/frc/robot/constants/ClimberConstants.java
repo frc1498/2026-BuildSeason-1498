@@ -4,6 +4,8 @@
 
 package frc.robot.constants;
 
+import edu.wpi.first.math.geometry.Pose2d;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -35,5 +37,23 @@ public class ClimberConstants {
 
   //======================Sim Values===================
 
-  
+  //======================Poses=====================
+  /* define a 2D array to hold positions for quick climb
+   *        0           1
+   * 0 [blue left][blue right]
+   * 1 [red left][red right]
+  */
+  // TO DO: Initialize array with the actual coordinates
+  public static final Pose2d[][] quickClimbPoses = {
+    //Blue
+    {
+      new Pose2d(), //left
+      new Pose2d() //right
+    },
+    //Red
+    {
+      new Pose2d(), //left
+      new Pose2d() //right
+    }
+  };
 }
