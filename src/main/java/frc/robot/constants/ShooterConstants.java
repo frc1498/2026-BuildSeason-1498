@@ -46,6 +46,13 @@ public class ShooterConstants {
   public static final int kKickupMaxSpeed = 0;
   public static final int kKickupMinSpeed = 0;
 
+  /* Simulation Constants */
+  public static final double kShooterFlywheelGearing = 1.0;
+  public static final double kHoodGearing = 1.0;
+  public static final double kTurretGearing = 1.0;
+  public static final double kSpindexerGearing = 1.0;
+  public static final double kKickupGearing = 1.0;
+
   public static final Pose2d kRedHubCenter = new Pose2d(11.912, 4.028, Rotation2d.fromDegrees(180.0));
   public static final Pose2d kBlueHubCenter = new Pose2d(4.622, 4.028, new Rotation2d(0.0));
 
