@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.config.HopperConfig;
 import frc.robot.constants.MotorEnableConstants;
-import frc.robot.constants.ShooterConstants;
 import frc.robot.constants.HopperConstants;
 
 public class Hopper extends SubsystemBase {
@@ -28,7 +27,7 @@ public class Hopper extends SubsystemBase {
   HopperConfig hopperConfig; //Create an object of type HopperConfig
 
   public Hopper(HopperConfig config) {
-    hopperMotor = new TalonFX(config.kHopperExtendCANID, "canivore");  //Create a motor for this subsystem
+    hopperMotor = new TalonFX(HopperConfig.kHopperExtendCANID, "canivore");  //Create a motor for this subsystem
     hopperMotorMode = new PositionVoltage(0);  //Set the motor's control mode
 
     this.configureMechanism(hopperMotor, config.hopperConfig);

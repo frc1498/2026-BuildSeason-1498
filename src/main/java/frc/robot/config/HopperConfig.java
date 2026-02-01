@@ -19,6 +19,8 @@ public class HopperConfig {
 
       public void configureHopper(TalonFXConfiguration hopper){
 
+        //super low current limit to create software spring
+
         //configure motor
         hopper.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         hopper.MotorOutput.NeutralMode = NeutralModeValue.Brake;

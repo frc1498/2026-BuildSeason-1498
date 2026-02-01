@@ -18,8 +18,6 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
  */
 public class ShooterConstants {
 
-  /*==============Positions=================*/
-
   /*===============Speeds===================*/
   public static final double kKickupIntake = 10.0;
   public static final double kKickupOuttake = -10.0;
@@ -45,7 +43,26 @@ public class ShooterConstants {
 
   public static final double kKickupMaxSpeed = 500.0;
   public static final double kKickupMinSpeed = -50.0;
+  
+  //==============DutyCycles====================
+  public static final double kTurretZeroDutyCycle = 0;
+  public static final double kKickupZeroDutyCycle = 0;
+  public static final double kSpindexerZeroDutyCycle = 0;
+  public static final double kShooterZeroDutyCycle = 0;
 
+  //==============Positions=================
+  public static final double kTurretZeroPosition = 0;
+  public static final double kTurretSlowShootPosition = 0;
+  public static final double kTurretClimbPosition = 0;
+
+  public static final double kSpindexerStoppedVelocityTolerance = 0;
+  public static final double kKickupStoppedVelocityTolerance = 0;
+
+  public static final double kSlowShoot = 0;
+
+  //=================Misc========================
+  public static final int kTurretZeroCurrentLimit = 0;
+  
   /* Simulation Constants */
   public static final double kShooterFlywheelGearing = 1.0; // 1 output : 1 input
   public static final double kHoodGearing = 1.0;

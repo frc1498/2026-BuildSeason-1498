@@ -14,21 +14,31 @@ import frc.robot.config.ClimberConfig;
 import frc.robot.config.HopperConfig;
 import frc.robot.config.IntakeConfig;
 import frc.robot.config.ShooterConfig;
+import frc.robot.commands.Move;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
@@ -41,19 +51,29 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 * subsystems, commands, and trigger mappings) should be declared here.
 */
 public class RobotContainer {
-  // The robot's subsystems and commands are defined here...
+    // The robot's subsystems and commands are defined here...
 
-  //=======================================================================
-  //=======================Assign Subsystem Names==========================
-  //======================================================================= 
-  public final ClimberConfig climberConfig = new ClimberConfig();
-  public Climber climber = new Climber(climberConfig);
+    //=======================================================================
+    //=======================Assign Subsystem Names==========================
+    //======================================================================= 
+    public final ClimberConfig climberConfig = new ClimberConfig();
+    public Climber climber = new Climber(climberConfig);
 
-  public HopperConfig hopperConfig = new HopperConfig();
-  public Hopper hopper = new Hopper(hopperConfig);
+    public HopperConfig hopperConfig = new HopperConfig();
+    public Hopper hopper = new Hopper(hopperConfig);
 
-  public IntakeConfig intakeConfig = new IntakeConfig();
-  public Intake intake = new Intake(intakeConfig);
+    public IntakeConfig intakeConfig = new IntakeConfig();
+    public Intake intake = new Intake(intakeConfig);
+
+    public ShooterConfig shooterConfig = new ShooterConfig();
+    public Shooter shooter = new Shooter(shooterConfig);
+
+    public File autonFolder = new File(Filesystem.getDeployDirectory() + "/pathplanner/autos");
+    public Selector autonSelect = new Selector(autonFolder, ".auto", "Auton Selector");
+    public Command selectedAuton;
+    public ArrayList<Command> autonCommands = new ArrayList<Command>();
+
+    public final Move move = new Move(climber,hopper,intake,shooter);
 
     //Gamepad assignment
     //Instantiate 
@@ -98,6 +118,7 @@ public class RobotContainer {
     * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
     * joysticks}.
     */
+
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
@@ -136,6 +157,10 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
+        this.DSAttached.onTrue(autonSelect.filterList(() -> {return DriverStation.getAlliance().get().toString();})
+            .andThen(() -> {this.autonCommands = this.loadAllAutonomous(autonSelect.currentList());}).ignoringDisable(true)
+            .andThen(() -> {this.selectedAuton = autonCommands.get(autonSelect.currentIndex().get());}).ignoringDisable(true));
+
         // Add the limelight pose estimate to the drivetrain estimate.
         //vision.addLimelightPose.whileTrue(vision.addMegaTag2(() -> {return drivetrain;}));
       
@@ -143,47 +168,53 @@ public class RobotContainer {
         //===================Driver Commands=================
         //===================================================
 
-        //Driver POV Up
-        //driver.povUp().
+        //Driver POV Up - Climb Hold (quick or otherwise, context sensitive)
+        driver.povUp().and(RobotModeTriggers.disabled()).onTrue(autonSelect.increment().andThen(() -> {this.selectedAuton = this.autonCommands.get(this.autonSelect.currentIndex().get());}).ignoringDisable(true));
+        driver.povUp().and(climber.isClimberReadyToClimb).onTrue(move.climbSequence());
+      
+        //Driver POV Down - Climb Stop
+        driver.povDown().and(RobotModeTriggers.disabled()).onTrue(autonSelect.decrement().andThen(() -> {this.selectedAuton = this.autonCommands.get(this.autonSelect.currentIndex().get());}).ignoringDisable(true));
+        driver.povDown().onTrue(move.stopClimb());
 
-        //Driver POV Down
-        //driver.povDown().
+        //Driver POV Left: Autodrive Quick Climb Left
+        //driver.povLeft().onTrue(Commands.select(Map.ofEntries(
+		//Map.entry("", drivetrain.pathPlannerToPose(vistion.getDesiredClimbPoseLeft())),
+		//Map.entry("", drivetrain.pathPlannerToPose(vistion.getDesiredClimbPoseLeft()))),
+		//endEffector.getMode??????()));
 
-        //Driver POV Left
-        //driver.povLeft().
+        //Driver POV Right: Autodrive Quick Climb Right
+        //driver.povRight().onTrue
 
-        //Driver POV Right
-        //driver.povRight().
+        //Driver X button: Empty Hopper / Slow shot / Hopper In
+        driver.x().whileTrue(move.emptyHopper());
 
-        //Driver X button
-        driver.x().onTrue(shooter.setShooterOutputs());
+        //Driver Y button: Reverse spindexer and kickup
+        driver.b().whileTrue(move.stopSpinAndKick().andThen(move.reverseSpinAndKick())).onFalse(
+            move.stopSpinAndKick());
 
-        //Driver Y button
-        driver.y().onTrue(shooter.setSpindexerAndKickupForward());
+        //Driver A button: Prime Climb - pulls hopper in and goes to slow shoot and readies hooks
+        driver.a().onTrue(move.primeClimb());
 
-        //Driver A button
-        driver.a().onTrue(shooter.setSpindexerAndKickupIdle());
+        //Driver B button: Hopper In/Out
+        driver.y().whileTrue(move.hopperRetract()).onFalse(move.hopperExtend());
 
-        //Driver B button
-        //driver.b().
+        //Driver RTrigger: Shoot off
+        driver.rightTrigger(0.1).onTrue(move.stopShoot());
 
-        //Driver RTrigger
-        //driver.rightTrigger(0.1).
+        //Driver RBumper: Shoot on 
+        driver.rightBumper().onTrue(move.startShoot());
 
-        //Driver RBumper 
-        //driver.rightBumper().
+        //Driver LTrigger: Intake off / Hold to reverse
+        driver.leftTrigger(0.1).onTrue(move.stopOrReverseIntake());
 
-        //Driver LTrigger
-        //driver.leftTrigger(0.1).
+        //Driver LBumper Intake on
+        driver.leftBumper().onTrue(move.intake());
 
-        //Driver LBumper
-        //driver.leftBumper().
+        //Driver Select: Zero drivetrain
+        driver.start().onTrue(drivetrain.runOnce(()->drivetrain.seedFieldCentric()));
 
-        //Driver Select
-        //driver.
-
-        //Driver Start
-        //driver.start().
+        //Driver Start: Home the Climb System (low current, will break hooks!)
+        driver.start().whileTrue(move.homeClimb());
 
         //===================================================
         //==================Operator Commands================
@@ -238,6 +269,8 @@ public class RobotContainer {
     * @return the command to run in autonomous
     */
     public Command getAutonomousCommand() {
+        return selectedAuton;
+        /*
         // Simple drive forward auton
         final var idle = new SwerveRequest.Idle();
         return Commands.sequence(
@@ -254,5 +287,24 @@ public class RobotContainer {
             // Finally idle for the rest of auton
             drivetrain.applyRequest(() -> idle)
         );
+        */
     }
+
+    /**
+     * Takes a list of PathPlanner auton file names and returns a list of PathPlanner commands based on the list.
+     * @param autonList
+     * @return
+     */
+    public ArrayList<Command> loadAllAutonomous(Supplier<ArrayList<String>> autonList) {
+        ArrayList<Command> commandList = new ArrayList<Command>();
+        for (var i : autonList.get()) {
+            commandList.add(new PathPlannerAuto(i));
+        }
+
+        return commandList;
+    }
+
+    // Use these triggers to determine when to filter the list of autons.
+    public Trigger DSAttached = new Trigger(DriverStation::isDSAttached);
+    public Trigger alliancePresent = new Trigger(() -> {return DriverStation.getAlliance().isPresent();});
 }

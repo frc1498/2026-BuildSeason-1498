@@ -6,17 +6,18 @@ Code for Team 1498's 2026 robot, Aurora Zwei. <br>
 ## General
 
 01/17/26 - Proved out the functionality of DogLog.  Will start integrating the logging into the subsystems. <br>
-01/17/26 - Started creating the code framework with subsystems, configurations, and constants.
+01/17/26 - Started creating the code framework with subsystems, configurations, and constants. <br>
 
 ## Planned Subsystems
 
 ### Drivetrain
 01/17/26 - CTRE Swerve Template generated. <br>
-01/17/26 - Added the PathPlanner base code into the drive subsystem.
+01/17/26 - Added the PathPlanner base code into the drive subsystem. <br>
+01/29/26 - Auton selection is roughly in place.  The code will crash if there are no autons for the specified alliance. Allow an empty command.<br>
+01/29/26 - I don't like the auton selector, but I don't have a better solution in place.  At the least, maybe simplify the code for the Selector class.
+
 #### *To-Do*
 - Drive the robot on the floor to determine gains.
-- Add auton selection code.
-- Add code to run the selected auton.
 - Add code to drive to a set position during TeleOp.
 
 ### Vision
