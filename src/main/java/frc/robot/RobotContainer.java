@@ -147,7 +147,7 @@ public class RobotContainer {
         //===================================================
 
         //Driver POV Up: Climb Hold (quick or otherwise, context sensitive)
-        //driver.povUp().and(climber.isClimberReadyToClimb).onTrue(move.climbSequence());
+        driver.povUp().and(climber.isClimberReadyToClimb).onTrue(move.climbSequence());
 
         //Driver POV Down: Climb Stop
         driver.povDown().onTrue(move.stopClimb());
@@ -162,22 +162,23 @@ public class RobotContainer {
         //driver.povRight().onTrue
 
         //Driver X button: Empty Hopper / Slow shot / Hopper In
-        //driver.x().whileTrue(move.emptyHopper());
+        driver.x().whileTrue(move.emptyHopper());
 
         //Driver Y button: Reverse spindexer and kickup
-        driver.y().whileTrue(move.reverseSpinAndKick());
+        driver.b().whileTrue(move.stopSpinAndKick().andThen(move.reverseSpinAndKick())).onFalse(
+            move.stopSpinAndKick());
 
         //Driver A button: Prime Climb - pulls hopper in and goes to slow shoot and readies hooks
         driver.a().onTrue(move.primeClimb());
 
         //Driver B button: Hopper In/Out
-        //driver.b().whileTrue(move.HopperInOrOut());
+        driver.y().whileTrue(move.hopperRetract()).onFalse(move.hopperExtend());
 
         //Driver RTrigger: Shoot off
-        //driver.rightTrigger(0.1).onTrue(move.stopShoot());
+        driver.rightTrigger(0.1).onTrue(move.stopShoot());
 
         //Driver RBumper: Shoot on 
-        //driver.rightBumper().onTrue(move.requestShoot());
+        driver.rightBumper().onTrue(move.startShoot());
 
         //Driver LTrigger: Intake off / Hold to reverse
         driver.leftTrigger(0.1).onTrue(move.stopOrReverseIntake());
@@ -190,8 +191,6 @@ public class RobotContainer {
 
         //Driver Start: Home the Climb System (low current, will break hooks!)
         driver.start().whileTrue(move.homeClimb());
-
-
 
         //===================================================
         //==================Operator Commands================

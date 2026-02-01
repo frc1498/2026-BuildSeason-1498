@@ -15,8 +15,9 @@ package frc.robot.constants;
 public class IntakeConstants {
 
   //=====================Speeds=====================
-  public static final int kIntakeSpeed = 0;
-  public static final int kStopSpeed = 0;
-  public static final int kOuttakeSpeed = 0;
+  public static final double kIntakeSpeed = 0;
+  public static final double kStopSpeed = 0;
+  public static final double kOuttakeSpeed = 0;
+  public static final double kIntakeDutyCycleStop = 0;
 
 }

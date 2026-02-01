@@ -56,20 +56,17 @@ public class Move {
     //=====================Commands=============================
     //==========================================================
 
-    /*
     public Command climbSequence() {
-        return Commands.parallel(hopper.hopperRetract(),climber.liftClimbExtend(), climber.rotateClimb1Extend(), climber.rotateClimb2Extend()).andthen(  //Verify hooks extended and hopper retracted
-            climber.liftClimbPastHandoff()).andthen( //Lift pulls down to rotate hooks  
-            climber.rotateClimbEngaged()).andthen( //Rotate hooks are engaged
+        return Commands.parallel(hopper.hopperRetract(),climber.liftClimbExtend(), climber.rotateClimb1Extend(), climber.rotateClimb2Extend()).andThen(  //Verify hooks extended and hopper retracted
+            climber.liftClimbPastHandoff()).andThen( //Lift pulls down to rotate hooks  
+            climber.rotateClimbEngaged()).andThen( //Rotate hooks are engaged
             Commands.parallel(climber.liftClimbExtend(),climber.rotateClimb1Retract(),climber.rotateClimb2Retract())).andThen(  //Lift extends to climb ready while rotate retracts
-            climber.liftClimbPastHandoff(),climber.rotateClimb1Extend(),climber.rotateClimb2Extend()).andthen( //Lift pulls down while rotate hooks return upward 
-            climber.rotateClimbEngaged()).andthen( //Rotate hooks are engaged
+            climber.liftClimbPastHandoff(),climber.rotateClimb1Extend(),climber.rotateClimb2Extend()).andThen( //Lift pulls down while rotate hooks return upward 
+            climber.rotateClimbEngaged()).andThen( //Rotate hooks are engaged
             Commands.parallel(climber.liftClimbExtend(),climber.rotateClimb1Retract(),climber.rotateClimb2Retract())).andThen(  //Lift extends to climb ready while rotate retracts
-            climber.liftClimbPastHandoff(),climber.rotateClimb1Extend(),climber.rotateClimb2Extend()).andthen( //Lift pulls down while rotate hooks return upward             
-            )
-        );
+            climber.liftClimbPastHandoff(),climber.rotateClimb1Extend(),climber.rotateClimb2Extend()).andThen( //Lift pulls down while rotate hooks return upward             
+            );
     }
-    */
 
     public Command stopClimb() {
         return Commands.parallel(climber.rotateClimb1Stop(),climber.rotateClimb2Stop(),climber.liftClimbStop());
@@ -90,51 +87,61 @@ public class Move {
     }
     
 
-    /*
+    //================================Hopper================================
     public Command emptyHopper() {
-        //return;
-    }
-    */
+        return Commands.parallel(shooter.slowShoot(),shooter.turretSlowShootPosition()).andThen(
+            shooter.forwardSpindexer(),shooter.forwardKickup());
+    }    
 
-    public Command reverseSpinAndKick() {
+    public Command stopEmptyHopper () {
+        return Commands.parallel(shooter.stopShoot(), shooter.stopSpindexer(), shooter.stopKickup());
+    }
+
+    public Command hopperRetract(){
+        return hopper.hopperRetract();
+    }
+
+    public Command hopperExtend(){
+        return hopper.hopperExtend();
+    }
+
+    //==============================Spin and Kick================================
+    public Command reverseSpinAndKick() {  //Need to make sure they are stopped first
         return Commands.parallel(shooter.reverseSpindexer(),shooter.reverseKickup());
     }
 
-    public Command primeClimb() {  //Need to add motor controllers and pin releases and the hopper has to be in
+    public Command stopSpinAndKick(){
+        return Commands.parallel(shooter.stopShoot(),shooter.stopSpindexer(),shooter.stopKickup());
+    }
+
+    //==================================Climb====================================
+    public Command primeClimb() {
         return Commands.parallel(hopper.hopperRetract(),intake.intakeStop()).andThen(
         Commands.parallel(climber.releasePins(), climber.rotateClimb1Extend(),climber.rotateClimb2Extend(),climber.liftClimbExtend()));
     }
 
-    /*
-    public Command HopperInOrOut() { //Make sure climber has not been released
-        return (hopper.hopperInOrOut());
+    public Command homeClimb() {  
+        return shooter.turretClimbPosition().andThen(
+            Commands.parallel(climber.rotateClimb1Home(), climber.rotateClimb2Home(), climber.liftClimbHome()).
+        until(climber.isClimberHome));
     }
 
     public Command stopShoot() {
-        //return;
+        return Commands.parallel(shooter.stopSpindexer(), shooter.stopKickup()).andThen(
+            shooter.stopShoot());
     }
 
-    public Command requestShoot() {
-        //return;
+    public Command startShoot() {
+        return (shooter.startShoot());
     }
-    */
 
-    public Command stopOrReverseIntake() {
+    public Command stopOrReverseIntake() { //Hopper needs to be extended first
         return (intake.intakeSpit());
     }
 
-    public Command intake() {
+    public Command intake() { //Hopper needs to be extended first
         return (intake.intakeSuck());
     }
-
-    public Command homeClimb() {  
-        return Commands.parallel(climber.rotateClimb1Home(),
-        climber.rotateClimb2Home(),
-        climber.liftClimbHome()).
-        until(climber.isClimberHome);
-    }
-
-
 
     //Shoot - this should act as a request to shoot
     //Stop Shooting?
@@ -148,8 +155,6 @@ public class Move {
     //Home Climb onTrue  Problem - how do we safely home the fold up hooks on the rotate?  We can't hold them while homing.  Need to have pins we can put in the hooks
     //Homing needs to be a very low power!!!!! Can't use the normal home command.
     //Should hopper tract while shooting to help feed balls, and what would the trigger be.  Through beam for balls?
-
-
 
     //======================================================
     //========================Triggers======================

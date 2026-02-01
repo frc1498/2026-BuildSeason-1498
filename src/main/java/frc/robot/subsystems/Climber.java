@@ -279,6 +279,13 @@ public class Climber extends SubsystemBase {
     );
   }
 
+  public Command rotateClimbEngaged() {
+    return run(
+      () -> {this.goToPositionRotateClimb(ClimberConstants.kRotateClimbHome);}
+    ).until(isRotateClimb1HandedOff);
+  }
+
+
   //===================Pin Commands========================
   public Command releasePins() {
     return run(
