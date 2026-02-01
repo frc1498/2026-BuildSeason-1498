@@ -2,6 +2,7 @@ package frc.robot.sim;
 
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -40,9 +41,11 @@ public class ShooterSim implements AutoCloseable {
     private double flywheelPosition;
 
     private double hoodVelocity;
+    private double hoodPositionDelta;
     private double hoodPosition;
 
     private double turretVelocity;
+    private double turretPositionDelta;
     private double turretPosition;
 
     private double spindexerVelocity;
@@ -69,6 +72,9 @@ public class ShooterSim implements AutoCloseable {
         this.spindexer = spindexer;
         this.kickup = kickup;
 
+        this.hoodPosition = 0.0;
+        this.turretPosition = 0.0;
+
         this.shooterFlywheel = new FlywheelSim(
             LinearSystemId.createFlywheelSystem(this.shooterGearbox, 0.001, ShooterConstants.kShooterFlywheelGearing),
             this.shooterGearbox
@@ -77,7 +83,7 @@ public class ShooterSim implements AutoCloseable {
         this.turretRotateSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(this.turretRotate, 0.001, ShooterConstants.kTurretGearing), this.turretRotate);
         this.spindexerRotateSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(this.spindexerRotate, 0.001, ShooterConstants.kSpindexerGearing), this.spindexerRotate);
         this.kickupRotateSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(this.kickupRotate, 0.001, ShooterConstants.kKickupGearing), this.kickupRotate);
-    
+        
         this.shooter_vis = new Mechanism2d(20.0, 20.0);
         this.shooter_root = this.shooter_vis.getRoot("Origin", 10.0, 10.0);
         this.shooter_hood = shooter_root.append(new MechanismLigament2d("Hood", 0.0, 0.0));
@@ -116,14 +122,24 @@ public class ShooterSim implements AutoCloseable {
         this.shooterOne.addRotorPosition(this.flywheelPosition);
 
         this.hoodVelocity = this.outputRPMToInputRPS(this.hoodAdjustSim.getAngularVelocityRPM(), ShooterConstants.kHoodGearing);
-        this.hoodPosition = this.hoodVelocity * this.simPeriod;
+        this.hoodPositionDelta = this.hoodVelocity * this.simPeriod;
+        this.hoodPosition += this.hoodPositionDelta;
         this.hood.setRotorVelocity(this.hoodVelocity);
-        this.hood.addRotorPosition(this.hoodPosition);
-
+        this.hood.addRotorPosition(this.hoodPositionDelta);
+        // If the simulation is overshooting the physical range, clamp it.
+        if(!this.inRange(this.hoodPosition, ShooterConstants.kHoodSafeRetract, ShooterConstants.kHoodSafeExtend)) {
+            this.turret.setRawRotorPosition(MathUtil.clamp(this.hoodPosition, ShooterConstants.kHoodSafeRetract, ShooterConstants.kHoodSafeExtend));
+        }
+        
         this.turretVelocity = this.outputRPMToInputRPS(this.turretRotateSim.getAngularVelocityRPM(), ShooterConstants.kTurretGearing);
-        this.turretPosition = this.turretVelocity * this.simPeriod;
+        this.turretPositionDelta = this.turretVelocity * this.simPeriod;
+        this.turretPosition += this.turretPositionDelta;
         this.turret.setRotorVelocity(this.turretVelocity);
-        this.turret.addRotorPosition(this.turretPosition);
+        this.turret.addRotorPosition(this.turretPositionDelta);
+        // If the simulation is overshooting the physical range, clamp it.
+        if(!this.inRange(this.turretPosition, ShooterConstants.kTurretSafeCounterClockwise, ShooterConstants.kTurretSafeClockwise)) {
+            this.turret.setRawRotorPosition(MathUtil.clamp(this.turretPosition, ShooterConstants.kTurretSafeCounterClockwise, ShooterConstants.kTurretSafeClockwise));
+        }
 
         this.spindexerVelocity = this.outputRPMToInputRPS(this.spindexerRotateSim.getAngularVelocityRPM(), ShooterConstants.kSpindexerGearing);
         this.spindexerPosition = this.spindexerVelocity * this.simPeriod;
@@ -151,6 +167,17 @@ public class ShooterSim implements AutoCloseable {
      */
     private double outputRPMToInputRPS(double velocity, double gearRatio) {
         return (velocity / 60.0) / gearRatio;
+    }
+
+    /**
+     * Checks if the setpoint is between the lower limit and upper limit.  Use this to determine when the position needs to be clamped.
+     * @param setpoint - The setpoint to check.
+     * @param lowerLimit - The lower limit (minimum).
+     * @param upperLimit - The upper limit (maximum).
+     * @return
+     */
+    private boolean inRange(double setpoint, double lowerLimit, double upperLimit) {
+        return (setpoint >= lowerLimit) && (setpoint <= upperLimit);
     }
 
     public Mechanism2d getVis() {

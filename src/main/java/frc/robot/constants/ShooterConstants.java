@@ -37,8 +37,8 @@ public class ShooterConstants {
   public static final double kHoodSafeExtend = 90.0;
   public static final double kHoodSafeRetract = 0.0;
   
-  public static final double kTurretSafeClockwise = 270.0;
-  public static final double kTurretSafeCounterClockwise = -270.0;
+  public static final double kTurretSafeClockwise = 180.0;
+  public static final double kTurretSafeCounterClockwise = -180.0;
 
   public static final double kShooterMaxSpeed = 100.0;
   public static final double kShooterMinSpeed = -100.0;

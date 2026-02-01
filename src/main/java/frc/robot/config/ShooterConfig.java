@@ -192,33 +192,33 @@ public class ShooterConfig {
         turret.Audio.AllowMusicDurDisable = true;
     }
 
-        public void configureKickupMotor(TalonFXConfiguration turret){
+        public void configureKickupMotor(TalonFXConfiguration kickup){
         //configure motor
-        turret.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        turret.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        turret.MotorOutput.PeakForwardDutyCycle = 1;
-        turret.MotorOutput.PeakReverseDutyCycle = -1;
+        kickup.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        kickup.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        kickup.MotorOutput.PeakForwardDutyCycle = 1;
+        kickup.MotorOutput.PeakReverseDutyCycle = -1;
 
-        turret.CurrentLimits.StatorCurrentLimit = 120.0;
-        turret.CurrentLimits.StatorCurrentLimitEnable = true;
-        turret.CurrentLimits.SupplyCurrentLimit = 20;    //Was 20
-        turret.CurrentLimits.SupplyCurrentLimitEnable = true;
-        turret.CurrentLimits.SupplyCurrentLowerLimit = 40.0;
-        turret.CurrentLimits.SupplyCurrentLowerTime = 1;
+        kickup.CurrentLimits.StatorCurrentLimit = 120.0;
+        kickup.CurrentLimits.StatorCurrentLimitEnable = true;
+        kickup.CurrentLimits.SupplyCurrentLimit = 20;    //Was 20
+        kickup.CurrentLimits.SupplyCurrentLimitEnable = true;
+        kickup.CurrentLimits.SupplyCurrentLowerLimit = 40.0;
+        kickup.CurrentLimits.SupplyCurrentLowerTime = 1;
 
         //Slot 0 Configs
-        turret.Slot0.kP = 0.3;  // An error of 1 rotation per second results in 2V output
-        turret.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
-        turret.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
-        turret.Slot0.kS = 0;
-        turret.Slot0.kV = 0;  // KV for a Kraken X60 is 490 rpm/V. 490/60 is 8.1667 rps/V.  The inverse is 0.122449 V/rps.
-        turret.Slot0.kA = 0;
-        turret.Slot0.kG = 0.0;
+        kickup.Slot0.kP = 0.3;  // An error of 1 rotation per second results in 2V output
+        kickup.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
+        kickup.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
+        kickup.Slot0.kS = 0;
+        kickup.Slot0.kV = 0;  // KV for a Kraken X60 is 490 rpm/V. 490/60 is 8.1667 rps/V.  The inverse is 0.122449 V/rps.
+        kickup.Slot0.kA = 0;
+        kickup.Slot0.kG = 0.0;
 
-        turret.Voltage.PeakForwardVoltage = 11;
-        turret.Voltage.PeakReverseVoltage = -11;
+        kickup.Voltage.PeakForwardVoltage = 11;
+        kickup.Voltage.PeakReverseVoltage = -11;
 
-        turret.Audio.AllowMusicDurDisable = true;
+        kickup.Audio.AllowMusicDurDisable = true;
     }
 
 }
