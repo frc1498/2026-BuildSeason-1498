@@ -14,6 +14,7 @@ import frc.robot.config.ClimberConfig;
 import frc.robot.config.HopperConfig;
 import frc.robot.config.IntakeConfig;
 import frc.robot.config.ShooterConfig;
+import frc.robot.commands.Move;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -71,7 +72,8 @@ public class RobotContainer {
     public Selector autonSelect = new Selector(autonFolder, ".auto", "Auton Selector");
     public Command selectedAuton;
     public ArrayList<Command> autonCommands = new ArrayList<Command>();
-    
+
+    public final Move move = new Move(climber,hopper,intake,shooter);
 
     //Gamepad assignment
     //Instantiate 
@@ -113,6 +115,7 @@ public class RobotContainer {
     * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
     * joysticks}.
     */
+
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
@@ -160,47 +163,53 @@ public class RobotContainer {
         //===================Driver Commands=================
         //===================================================
 
-        //Driver POV Up
+        //Driver POV Up - Climb Hold (quick or otherwise, context sensitive)
         driver.povUp().and(RobotModeTriggers.disabled()).onTrue(autonSelect.increment().andThen(() -> {this.selectedAuton = this.autonCommands.get(this.autonSelect.currentIndex().get());}).ignoringDisable(true));
-
-        //Driver POV Down
+        driver.povUp().and(climber.isClimberReadyToClimb).onTrue(move.climbSequence());
+      
+        //Driver POV Down - Climb Stop
         driver.povDown().and(RobotModeTriggers.disabled()).onTrue(autonSelect.decrement().andThen(() -> {this.selectedAuton = this.autonCommands.get(this.autonSelect.currentIndex().get());}).ignoringDisable(true));
+        driver.povDown().onTrue(move.stopClimb());
 
-        //Driver POV Left
-        //driver.povLeft().
+        //Driver POV Left: Autodrive Quick Climb Left
+        //driver.povLeft().onTrue(Commands.select(Map.ofEntries(
+		//Map.entry("", drivetrain.pathPlannerToPose(vistion.getDesiredClimbPoseLeft())),
+		//Map.entry("", drivetrain.pathPlannerToPose(vistion.getDesiredClimbPoseLeft()))),
+		//endEffector.getMode??????()));
 
-        //Driver POV Right
-        //driver.povRight().
+        //Driver POV Right: Autodrive Quick Climb Right
+        //driver.povRight().onTrue
 
-        //Driver X button
-        //driver.x().
+        //Driver X button: Empty Hopper / Slow shot / Hopper In
+        driver.x().whileTrue(move.emptyHopper());
 
-        //Driver Y button
-        //driver.y().
+        //Driver Y button: Reverse spindexer and kickup
+        driver.b().whileTrue(move.stopSpinAndKick().andThen(move.reverseSpinAndKick())).onFalse(
+            move.stopSpinAndKick());
 
-        //Driver A button
-        //driver.a().
+        //Driver A button: Prime Climb - pulls hopper in and goes to slow shoot and readies hooks
+        driver.a().onTrue(move.primeClimb());
 
-        //Driver B button
-        //driver.b().
+        //Driver B button: Hopper In/Out
+        driver.y().whileTrue(move.hopperRetract()).onFalse(move.hopperExtend());
 
-        //Driver RTrigger
-        //driver.rightTrigger(0.1).
+        //Driver RTrigger: Shoot off
+        driver.rightTrigger(0.1).onTrue(move.stopShoot());
 
-        //Driver RBumper 
-        //driver.rightBumper().
+        //Driver RBumper: Shoot on 
+        driver.rightBumper().onTrue(move.startShoot());
 
-        //Driver LTrigger
-        //driver.leftTrigger(0.1).
+        //Driver LTrigger: Intake off / Hold to reverse
+        driver.leftTrigger(0.1).onTrue(move.stopOrReverseIntake());
 
-        //Driver LBumper
-        //driver.leftBumper().
+        //Driver LBumper Intake on
+        driver.leftBumper().onTrue(move.intake());
 
-        //Driver Select
-        //driver.
+        //Driver Select: Zero drivetrain
+        driver.start().onTrue(drivetrain.runOnce(()->drivetrain.seedFieldCentric()));
 
-        //Driver Start
-        //driver.start().
+        //Driver Start: Home the Climb System (low current, will break hooks!)
+        driver.start().whileTrue(move.homeClimb());
 
         //===================================================
         //==================Operator Commands================

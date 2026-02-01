@@ -7,6 +7,7 @@
 package frc.robot.subsystems;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import frc.robot.config.IntakeConfig;
@@ -23,6 +24,10 @@ public class Intake extends SubsystemBase {
 
   IntakeConfig intakeConfig; //Create an object of type IntakeConfig
 
+  public String intakeState="stopped";
+
+  public DutyCycleOut intakeDutyCycle;
+
   //Constructor
   public Intake(IntakeConfig config) {
 
@@ -30,6 +35,9 @@ public class Intake extends SubsystemBase {
     intakeMotorMode = new VelocityVoltage(0);  //Set the motor's control mode
 
     this.configureMechanism(intakeMotor, config.intakeConfig);
+
+    intakeDutyCycle = new DutyCycleOut(0);
+
   }
 
   public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config){     
@@ -51,13 +59,25 @@ public class Intake extends SubsystemBase {
 
   private void intake(){
     if (MotorEnableConstants.kIntakeMotorEnabled) {
-      intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kIntakeSpeed));
+      if (intakeState=="outtaking") {
+        intakeMotor.setControl(intakeDutyCycle.withOutput(IntakeConstants.kIntakeDutyCycleStop));
+        intakeState="stopped";
+      } else if (intakeState == "stopped") {
+        intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kIntakeSpeed));
+        intakeState="intaking";
+      }
     }
   }
   
   private void outtake(){
     if (MotorEnableConstants.kIntakeMotorEnabled) {
-      intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kIntakeSpeed));
+      if (intakeState == "intaking") {
+        intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kStopSpeed));
+        intakeState = "stopped";
+      } else if (intakeState=="stopped") {
+        intakeMotor.setControl(intakeMotorMode.withVelocity(IntakeConstants.kOuttakeSpeed));
+        intakeState="outtaking";
+      }
     }
   }
 
@@ -70,19 +90,19 @@ public class Intake extends SubsystemBase {
   //=============Public Methods==========================
   //=====================================================
   
-  public Command IntakeSuck() {
+  public Command intakeSuck() {
     return run(
       () -> {this.intake();}
     );
   }
 
-  public Command IntakeSpit() {
+  public Command intakeSpit() {
     return run(
       () -> {this.outtake();}
     );
   }
 
-    public Command IntakeStop() {
+    public Command intakeStop() {
     return run(
       () -> {this.stop();}
     );

@@ -8,10 +8,13 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.config.ShooterConfig;
 import frc.robot.constants.MotorEnableConstants;
 import frc.robot.constants.ShooterConstants;
@@ -34,8 +37,14 @@ public class Shooter extends SubsystemBase {
 
   ShooterConfig shooterConfig; //Create an object of type climber config to use to configure motors
 
+  
+  public DutyCycleOut turretDutyCycle;
+  public DutyCycleOut shooterDutyCycle;
+  public DutyCycleOut kickupDutyCycle;
+  public DutyCycleOut spindexerDutyCycle;
 
-
+  boolean turretZeroed;
+  boolean requestShoot;
 
 /** Creates a new ExampleSubsystem. */
 public Shooter(ShooterConfig config) {
@@ -60,6 +69,14 @@ public Shooter(ShooterConfig config) {
   hoodMotor = new TalonFX(ShooterConfig.kHoodMotorCANID, "canivore");  //Create a motor for this subsystem
   hoodMotorMode = new PositionVoltage(0);  //Set the motor's control mode
   this.configureMechanism(hoodMotor, config.hoodMotorConfig);
+
+  turretZeroed = true;
+  turretDutyCycle = new DutyCycleOut(0.0);
+  shooterDutyCycle = new DutyCycleOut(0.0);
+  spindexerDutyCycle = new DutyCycleOut(0.0);
+  kickupDutyCycle = new DutyCycleOut(0.0);
+
+  requestShoot = false;
 
 }
 
@@ -113,17 +130,112 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config){
       spindexerMotor.setControl(spindexerMotorMode.withVelocity(speed));
     }
   }
+ 
+  private void zeroTurret() {
+    turretMotor.setControl(turretDutyCycle.withOutput(ShooterConstants.kTurretZeroDutyCycle)); //set a low constant speed
+  }
   
+  private boolean isTurretAtZero() {
+    if (turretMotor.getStatorCurrent().getValueAsDouble() > ShooterConstants.kTurretZeroCurrentLimit) { //Check current draw for hard stop collision
+      turretZeroed=true;  //Turret zeroing is complete because we passed the current limit threshold
+      turretMotor.setPosition(ShooterConstants.kTurretZeroPosition); //set the encoder position on the motor to whatever it should be
+      //Going to have to talk to trevor - how do we go "back" into tracking more turretMotor.setControl(.withOutput();      
+    }
+    return turretZeroed;  
+  }
+
+  private void stopKick(){
+    kickupMotor.setControl(kickupDutyCycle.withOutput(ShooterConstants.kKickupZeroDutyCycle));
+  }
+
+  private void stopSpindex(){
+    spindexerMotor.setControl(spindexerDutyCycle.withOutput(ShooterConstants.kSpindexerZeroDutyCycle));
+  }
+
+  private void stopShooting() {
+    requestShoot=false;
+    shooter1Motor.setControl(shooterDutyCycle.withOutput(ShooterConstants.kShooterZeroDutyCycle));
+    shooter2Motor.setControl(shooterDutyCycle.withOutput(ShooterConstants.kShooterZeroDutyCycle));
+  }
+
+  private void startShooting() {
+    requestShoot=true;
+  }
+
+  private boolean isSpindexerStopped() {
+    boolean isSpindexerStopped=false;
+    if (spindexerMotor.getVelocity().getValueAsDouble() < ShooterConstants.kSpindexerStoppedVelocityTolerance) {
+      isSpindexerStopped=true;
+    }
+    return isSpindexerStopped;
+  }
+
+  private boolean isKickupStopped() {
+    boolean isKickupStopped=false;
+    if (kickupMotor.getVelocity().getValueAsDouble() < ShooterConstants.kKickupStoppedVelocityTolerance) {
+      isKickupStopped=true;
+    }
+    return isKickupStopped;
+  }
+
   //====================Public Methods=====================
+	public Command reZeroTurret() {
+	  turretZeroed=false;
+	  return run(() -> {this.zeroTurret();})
+	    .until(isTurretZeroed);
+	}
+  
+  public Command stopSpindexer() {
+    return run(() -> {this.stopSpindex();})
+      .until(isSpindexerStopped);
+  }
+
+  public Command reverseSpindexer() {
+    return run(() -> {this.goToSpindexerSpeed(ShooterConstants.kSpindexerReverse);});
+  }
+
+  public Command forwardSpindexer() {
+    return run(() -> {this.goToSpindexerSpeed(ShooterConstants.kSpindexerForward);});
+  }
+
+  public Command stopKickup() {
+    return run(() -> {this.stopKick();})
+      .until(isKickupStopped);
+  }
+
+  public Command reverseKickup() {
+    return run(() -> {this.goToKickupSpeed(ShooterConstants.kKickUpReverse);});
+  }
+
+  public Command forwardKickup() {
+    return run(() -> {this.goToKickupSpeed(ShooterConstants.kKickUpForward);});
+  }
 
 
+  public Command stopShoot() {
+    return run(() -> {this.stopShooting();});
+  }
 
+  public Command startShoot() {
+    return run(() -> {this.startShooting();});
+  }
 
+  public Command slowShoot() {
+    return run(() -> {this.goToShooterSpeed(ShooterConstants.kSlowShoot);});
+  }
+
+  public Command turretSlowShootPosition() {
+    return run(() -> {this.goToTurretPosition(ShooterConstants.kTurretSlowShootPosition);});
+  }
+
+  public Command turretClimbPosition() {
+    return run(() -> {this.goToTurretPosition(ShooterConstants.kTurretClimbPosition);});
+  }
 
   //======================Triggers=========================
-
-
-
+  public Trigger isTurretZeroed = new Trigger(() -> {return this.isTurretAtZero();});
+  public Trigger isSpindexerStopped = new Trigger(() -> {return this.isSpindexerStopped();});
+  public Trigger isKickupStopped = new Trigger(() -> {return this.isKickupStopped();});
 
 
   @Override
