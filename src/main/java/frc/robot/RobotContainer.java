@@ -65,15 +65,10 @@ public class RobotContainer {
     public IntakeConfig intakeConfig = new IntakeConfig();
     public Intake intake = new Intake(intakeConfig);
 
-    public ShooterConfig shooterConfig = new ShooterConfig();
-    public Shooter shooter = new Shooter(shooterConfig);
-
     public File autonFolder = new File(Filesystem.getDeployDirectory() + "/pathplanner/autos");
     public Selector autonSelect = new Selector(autonFolder, ".auto", "Auton Selector");
     public Command selectedAuton;
     public ArrayList<Command> autonCommands = new ArrayList<Command>();
-
-    public final Move move = new Move(climber,hopper,intake,shooter);
 
     //Gamepad assignment
     //Instantiate 
@@ -98,6 +93,8 @@ public class RobotContainer {
 
     public ShooterConfig shooterConfig = new ShooterConfig();
     public Shooter shooter = new Shooter(shooterConfig, drivetrain::getStateCopy);
+
+    public final Move move = new Move(climber,hopper,intake,shooter);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
