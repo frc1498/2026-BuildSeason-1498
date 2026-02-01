@@ -353,7 +353,7 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
    * Set the velocity of the spindexer motor.
    * @param velocity - The desired velocity of the spindexer motor, in rotations per second.
    */
-  private void setSpindexerSpeed(double velocity) {
+  private void setSpindexerVelocity(double velocity) {
     // Always store the setpoint, to track the desired velocity.
     this.desiredSpindexerVelocity = velocity;
 
@@ -419,8 +419,9 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
   private Command setSpindexerAndKickup(ShooterState state) {
     return runOnce(() -> {
       this.setKickupVelocity(state.kickup());
-      this.setSpindexerSpeed(state.spindexer());
+      this.setSpindexerVelocity(state.spindexer());
     }).withName("setSpindeerAndKickup: " + state.name());
+  }
  
   private void zeroTurret() {
     turretMotor.setControl(turretDutyCycle.withOutput(ShooterConstants.kTurretZeroDutyCycle)); //set a low constant speed
@@ -482,11 +483,11 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
   }
 
   public Command reverseSpindexer() {
-    return run(() -> {this.goToSpindexerSpeed(ShooterConstants.kSpindexerReverse);});
+    return run(() -> {this.setSpindexerVelocity(ShooterConstants.kSpindexerOuttake);});
   }
 
   public Command forwardSpindexer() {
-    return run(() -> {this.goToSpindexerSpeed(ShooterConstants.kSpindexerForward);});
+    return run(() -> {this.setSpindexerVelocity(ShooterConstants.kSpindexerIntake);});
   }
 
   public Command stopKickup() {
@@ -495,11 +496,11 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
   }
 
   public Command reverseKickup() {
-    return run(() -> {this.goToKickupSpeed(ShooterConstants.kKickUpReverse);});
+    return run(() -> {this.setKickupVelocity(ShooterConstants.kKickupOuttake);});
   }
 
   public Command forwardKickup() {
-    return run(() -> {this.goToKickupSpeed(ShooterConstants.kKickUpForward);});
+    return run(() -> {this.setKickupVelocity(ShooterConstants.kKickupIntake);});
   }
 
   public Command setSpindexerAndKickupForward() {return this.setSpindexerAndKickup(ShooterState.FORWARD);};
@@ -515,15 +516,15 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
   }
 
   public Command slowShoot() {
-    return run(() -> {this.goToShooterSpeed(ShooterConstants.kSlowShoot);});
+    return run(() -> {this.setShooterVelocity(ShooterConstants.kSlowShoot);});
   }
 
   public Command turretSlowShootPosition() {
-    return run(() -> {this.goToTurretPosition(ShooterConstants.kTurretSlowShootPosition);});
+    return run(() -> {this.setTurretPosition(ShooterConstants.kTurretSlowShootPosition);});
   }
 
   public Command turretClimbPosition() {
-    return run(() -> {this.goToTurretPosition(ShooterConstants.kTurretClimbPosition);});
+    return run(() -> {this.setTurretPosition(ShooterConstants.kTurretClimbPosition);});
   }
 
   //======================Triggers=========================
