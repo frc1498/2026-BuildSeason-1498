@@ -18,12 +18,20 @@ import frc.robot.commands.Move;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -59,6 +67,11 @@ public class RobotContainer {
 
     public ShooterConfig shooterConfig = new ShooterConfig();
     public Shooter shooter = new Shooter(shooterConfig);
+
+    public File autonFolder = new File(Filesystem.getDeployDirectory() + "/pathplanner/autos");
+    public Selector autonSelect = new Selector(autonFolder, ".auto", "Auton Selector");
+    public Command selectedAuton;
+    public ArrayList<Command> autonCommands = new ArrayList<Command>();
 
     public final Move move = new Move(climber,hopper,intake,shooter);
 
@@ -139,6 +152,10 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
+        this.DSAttached.onTrue(autonSelect.filterList(() -> {return DriverStation.getAlliance().get().toString();})
+            .andThen(() -> {this.autonCommands = this.loadAllAutonomous(autonSelect.currentList());}).ignoringDisable(true)
+            .andThen(() -> {this.selectedAuton = autonCommands.get(autonSelect.currentIndex().get());}).ignoringDisable(true));
+
         // Add the limelight pose estimate to the drivetrain estimate.
         //vision.addLimelightPose.whileTrue(vision.addMegaTag2(() -> {return drivetrain;}));
       
@@ -146,10 +163,12 @@ public class RobotContainer {
         //===================Driver Commands=================
         //===================================================
 
-        //Driver POV Up: Climb Hold (quick or otherwise, context sensitive)
+        //Driver POV Up - Climb Hold (quick or otherwise, context sensitive)
+        driver.povUp().and(RobotModeTriggers.disabled()).onTrue(autonSelect.increment().andThen(() -> {this.selectedAuton = this.autonCommands.get(this.autonSelect.currentIndex().get());}).ignoringDisable(true));
         driver.povUp().and(climber.isClimberReadyToClimb).onTrue(move.climbSequence());
-
-        //Driver POV Down: Climb Stop
+      
+        //Driver POV Down - Climb Stop
+        driver.povDown().and(RobotModeTriggers.disabled()).onTrue(autonSelect.decrement().andThen(() -> {this.selectedAuton = this.autonCommands.get(this.autonSelect.currentIndex().get());}).ignoringDisable(true));
         driver.povDown().onTrue(move.stopClimb());
 
         //Driver POV Left: Autodrive Quick Climb Left
@@ -245,6 +264,8 @@ public class RobotContainer {
     * @return the command to run in autonomous
     */
     public Command getAutonomousCommand() {
+        return selectedAuton;
+        /*
         // Simple drive forward auton
         final var idle = new SwerveRequest.Idle();
         return Commands.sequence(
@@ -261,5 +282,24 @@ public class RobotContainer {
             // Finally idle for the rest of auton
             drivetrain.applyRequest(() -> idle)
         );
+        */
     }
+
+    /**
+     * Takes a list of PathPlanner auton file names and returns a list of PathPlanner commands based on the list.
+     * @param autonList
+     * @return
+     */
+    public ArrayList<Command> loadAllAutonomous(Supplier<ArrayList<String>> autonList) {
+        ArrayList<Command> commandList = new ArrayList<Command>();
+        for (var i : autonList.get()) {
+            commandList.add(new PathPlannerAuto(i));
+        }
+
+        return commandList;
+    }
+
+    // Use these triggers to determine when to filter the list of autons.
+    public Trigger DSAttached = new Trigger(DriverStation::isDSAttached);
+    public Trigger alliancePresent = new Trigger(() -> {return DriverStation.getAlliance().isPresent();});
 }
