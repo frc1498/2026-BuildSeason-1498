@@ -96,6 +96,9 @@ public class RobotContainer {
 
     public final Vision vision = new Vision(drivetrain, drivetrain::getStateCopy, drivetrain::addVisionMeasurement);
 
+    public ShooterConfig shooterConfig = new ShooterConfig();
+    public Shooter shooter = new Shooter(shooterConfig, drivetrain::getStateCopy);
+
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         // Create DogLog
@@ -127,6 +130,8 @@ public class RobotContainer {
                     .withRotationalRate(-driver.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
+
+        shooter.setDefaultCommand(shooter.setShooterOutputs());
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
