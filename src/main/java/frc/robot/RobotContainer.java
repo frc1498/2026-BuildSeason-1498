@@ -1,3 +1,4 @@
+
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
@@ -235,6 +236,7 @@ public class RobotContainer {
 
         //Operator X button
         /*
+        
         operator.x().whileTrue(Commands.sequence(move.setTargetToAllianceCornerLeft(),
             Commands.parallel(setShootOnMoveSpeed(),move.startWhileMoveShoot())))
             .onFalse(Commands.sequence(setNormalMoveSpee(),move.setTargetToAllianceHub(),move.stopShoot()));
@@ -261,7 +263,7 @@ public class RobotContainer {
         //operator.leftBumper()
 
         //Operator y button
-        operator.y().onTrue(move.hopperRetract()).onFalse(move.hopperExtend());
+        operator.y().onTrue(move.hopperMid()).onFalse(move.hopperExtend());
 
         //Operator Start
         //operator.START().

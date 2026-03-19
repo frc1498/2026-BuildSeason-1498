@@ -26,7 +26,7 @@ public class ShooterConstants {
   /*===============Speeds===================*/
   public static final double kKickupIntake = 90.0;  //Verified 2/25/26
   public static final double kKickupOuttake = -12.0;  //Verified 2/25/26
-  public static final double kSpindexerIntake = 50.0;  
+  public static final double kSpindexerIntake = 90;  //Was 50
   public static final double kSpindexerOuttake = -10.0;  
     public static final double kSpindexerStoppedVelocityTolerance = 2;
 
