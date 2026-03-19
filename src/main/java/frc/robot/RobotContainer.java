@@ -6,6 +6,7 @@
 package frc.robot;
 
 import frc.robot.constants.ControllerConstants;
+import frc.robot.constants.MotorEnableConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Hopper;
 import frc.robot.subsystems.Intake;
@@ -57,13 +58,13 @@ public class RobotContainer {
     //=======================Assign Subsystem Names==========================
     //======================================================================= 
     public final ClimberConfig climberConfig = new ClimberConfig();
-    public Climber climber = new Climber(climberConfig);
+    public Climber climber = new Climber(climberConfig, MotorEnableConstants.TelemetryLevel.LIMITED);
 
     public HopperConfig hopperConfig = new HopperConfig();
-    public Hopper hopper = new Hopper(hopperConfig);
+    public Hopper hopper = new Hopper(hopperConfig, MotorEnableConstants.TelemetryLevel.LIMITED);
 
     public IntakeConfig intakeConfig = new IntakeConfig();
-    public Intake intake = new Intake(intakeConfig);
+    public Intake intake = new Intake(intakeConfig, MotorEnableConstants.TelemetryLevel.LIMITED);
 
     public File autonFolder = new File(Filesystem.getDeployDirectory() + "/pathplanner/autos");
     public Selector autonSelect = new Selector(autonFolder, ".auto", "Auton Selector");
@@ -79,8 +80,8 @@ public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
     private boolean DSLatch = false;
-    private double precisionDampener = 1.0; //This makes it sound just as cool as it sounded last year.  It's like a dampening field from Star Trek.  Que theremin music.
-    //On another note, this is actually just a speed and rotation limiter for the robot, in percent.
+    private double precisionDampenerTranslation = 1.0; //Translation Speed Limiter
+    private double precisionDampenerRotation = 1.0; //Rotation Speed Limiter
     
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -93,14 +94,14 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-    public final Vision vision = new Vision(drivetrain, drivetrain::getStateCopy, drivetrain::addVisionMeasurement);
+    public final Vision vision = new Vision(drivetrain, drivetrain::getStateCopy, drivetrain::addVisionMeasurement, MotorEnableConstants.TelemetryLevel.LIMITED);
 
     public ShooterConfig shooterConfig = new ShooterConfig();
-    public Shooter shooter = new Shooter(shooterConfig, drivetrain::getStateCopy);
+    public Shooter shooter = new Shooter(shooterConfig, drivetrain::getStateCopy, MotorEnableConstants.TelemetryLevel.LIMITED);
     // Because I'm lazy, I'm leaving the configurations for the kickup and spindexer motors in the shooter config.
     // We'll just pass the shooter config into the kickup and spindexer subsystems to use the already in-place configurations.
-    public Kickup kickup = new Kickup(shooterConfig);
-    public Spindexer spindexer = new Spindexer(shooterConfig);
+    public Kickup kickup = new Kickup(shooterConfig, MotorEnableConstants.TelemetryLevel.LIMITED);
+    public Spindexer spindexer = new Spindexer(shooterConfig, MotorEnableConstants.TelemetryLevel.LIMITED);
 
     public final Move move = new Move(climber,hopper,intake,shooter,drivetrain,kickup,spindexer);
 
@@ -129,9 +130,9 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() -> 
-                drive.withVelocityX(-(Math.pow(driver.getLeftY() * precisionDampener,3)) * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-(Math.pow(driver.getLeftX() * precisionDampener,3)) * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-driver.getRightX() * MaxAngularRate * precisionDampener) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-(Math.pow(driver.getLeftY() * precisionDampenerTranslation,3)) * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-(Math.pow(driver.getLeftX() * precisionDampenerTranslation,3)) * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-driver.getRightX() * MaxAngularRate * precisionDampenerRotation) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -153,7 +154,15 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        driver.povUp().or(driver.povDown()).and(this.DSAttached).and(this.getDSLatch.negate()).onTrue(autonSelect.filterList(() -> {return DriverStation.getAlliance().get().toString();})
+        driver.povUp().or(driver.povDown()).and(this.DSAttached).and(this.getDSLatch.negate()).onTrue(autonSelect.filterList(() -> {return DriverStation.getAlliance().get().toString();}));
+
+        /*
+        this.DSAttached.onTrue(autonSelect.filterList(() -> {return DriverStation.getAlliance().get().toString();})
+            .andThen(() -> {this.autonCommands = this.loadAllAutonomous(autonSelect.currentList());}).ignoringDisable(true)
+            .andThen(() -> {this.selectedAuton = autonCommands.get(autonSelect.currentIndex().get());}).ignoringDisable(true));
+        */
+
+         this.DSAttached.and(this.alliancePresent).and(this.getDSLatch.negate()).whileTrue(autonSelect.filterList(() -> {return DriverStation.getAlliance().get().toString();})
             .andThen(() -> {this.autonCommands = this.loadAllAutonomous(autonSelect.currentList());}).ignoringDisable(true)
             .andThen(() -> {this.selectedAuton = autonCommands.get(autonSelect.currentIndex().get());}).ignoringDisable(true)
             .andThen(drivetrain.runOnce(() -> drivetrain.resetPose(this.selectedAuton.getStartingPose())).ignoringDisable(true))
@@ -170,25 +179,15 @@ public class RobotContainer {
         driver.povDown().and(this.getDSLatch).and(RobotModeTriggers.disabled()).onTrue(autonSelect.decrement().andThen(() -> {this.selectedAuton = this.autonCommands.get(this.autonSelect.currentIndex().get());}).andThen(drivetrain.runOnce(() -> drivetrain.resetPose(this.selectedAuton.getStartingPose())).ignoringDisable(true)).ignoringDisable(true));
         
         //Driver RTrigger: Intake
-        //driver.rightTrigger(0.1).whileTrue(move.reverseIntake()).onFalse(move.stopIntake());
         driver.rightTrigger(0.1).onTrue(move.intake()).onFalse(move.stopIntake());
 
         //Driver RBumper hopperRetract
-        //driver.rightBumper().onTrue(move.intake()).onFalse(move.stopIntake());
         driver.rightBumper().onTrue(move.hopperRetract());
 
         //Driver LBumper climb
         driver.leftBumper().onTrue(move.climbRetract());
         
-        //operator.leftBumper().whileTrue(move.startShootStatic()).onFalse(move.stopShoot());
-        // driver.leftBumper().whileTrue(move.startAutoShoot()).onFalse(move.stopShoot());
-        /* This is the working shoot on the move code
-        driver.leftBumper().whileTrue(Commands.parallel(setShootOnMoveSpeed(),move.startWhileMoveShoot()))
-        .onFalse(Commands.parallel(setNormalMoveSpeed(),move.stopShoot()));
-        */
-
         //Driver left trigger: Shoot
-        //driver.leftBumper().whileTrue(Commands.sequence(move.setTargetToAllianceHub()).
         driver.leftTrigger(0.1).whileTrue(Commands.sequence(move.setTargetToAllianceHub()).
         andThen(Commands.parallel(setShootOnMoveSpeed(),move.startWhileMoveShoot())))
         .onFalse(Commands.parallel(setNormalMoveSpeed(),move.stopShoot()));
@@ -200,19 +199,12 @@ public class RobotContainer {
         driver.x().onTrue(move.zeroClimb());
 
         //Driver start: zero gyro
-        //driver.start().onTrue(move.hopperRetract());
         driver.start().onTrue(drivetrain.runOnce(()->drivetrain.seedFieldCentric()));
 
-        //Driver y: Climb Ready 
-        //driver.y().onTrue(move.climbExtend());
-  
         //Driver a: Climb extend
-        //driver.a().onTrue(move.climbRetract());
         driver.a().onTrue(move.climbExtend());
   
         //driver.b Reverse Intake
-        // driver.b().whileTrue(move.startWhileMoveShoot()).onFalse(move.stopShoot());
-        //driver.b().whileTrue(shooter.turretTrackToBlueHub().repeatedly()).onFalse(shooter.turret0());
         driver.b().whileTrue(move.reverseIntake()).onFalse(move.stopIntake());
 
         //Driver y: Zero Hopper position
@@ -250,7 +242,7 @@ public class RobotContainer {
         //Operator A button
         //operator.a()
 
-        //Operator RTrigger
+        //Operator RTrigger: Static pass button
         operator.rightTrigger(0.1).whileTrue(move.startShootStatic()).onFalse(move.stopShoot());
 
         //Operator RBumper 
@@ -268,6 +260,13 @@ public class RobotContainer {
         //Operator Start
         //operator.START().
 
+        //===================================================
+        //=================Misc Commands=====================
+        //===================================================
+        
+        //Auto agitate when shooting and not intaking
+        driver.leftBumper().and(driver.rightBumper().negate()).whileTrue(move.agitateHopper);
+        
         //===================================================
         //==================Developer Commands===============
         //===================================================        
@@ -296,8 +295,8 @@ public class RobotContainer {
         NamedCommands.registerCommand("stopIntake", move.stopIntake());
         NamedCommands.registerCommand("shoot", move.startWhileMoveShoot());
         NamedCommands.registerCommand("stopShoot", move.stopShoot());
-        NamedCommands.registerCommand("agitate", move.agitateHopper());
-        NamedCommands.registerCommand("retractHopper", move.hopperRetract());
+        NamedCommands.registerCommand("extendHopper", move.hopperExtend());
+        NamedCommands.registerCommand("retractHopperMid", move.hopperMid());
     }
 
     /**
@@ -319,6 +318,7 @@ public class RobotContainer {
     public Command setShootOnMoveSpeed () {return Commands.runOnce(() -> {this.precisionDampener=0.8;});}
 
     public Command setNormalMoveSpeed () {return Commands.runOnce(()-> {this.precisionDampener=1.0;});}
+
 
     // Use these triggers to determine when to filter the list of autons.
     public Trigger DSAttached = new Trigger(DriverStation::isDSAttached);

@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -29,6 +30,7 @@ public class Move {
     public Kickup kickup;
     public Spindexer spindexer;
 
+
     public Move(Climber climber, Hopper hopper, Intake intake, Shooter shooter, CommandSwerveDrivetrain drivetrain, Kickup kickup, Spindexer spindexer) {
         this.climber = climber;
         this.hopper = hopper;
@@ -48,7 +50,6 @@ public class Move {
     //==========================================================
     private int getAlliance() {
         if (DriverStation.getAlliance().isPresent()) {
-
             if (DriverStation.getAlliance().get() == Alliance.Blue) {
                 return 0;
             }
@@ -58,6 +59,9 @@ public class Move {
         }
         return 0;
     }
+
+    //=============================Misc==========================================
+
 
     //==========================================================
     //=====================Commands=============================
@@ -122,9 +126,6 @@ public class Move {
     }
 
     //==============================Shoot========================================
-
-    // Commands of the same subsystem cannot be run in parallel (resource conflict).
-    // Switching it to a command sequence.
     public Command stopShoot() {
         //return shooter.stopShoot();  
         return Commands.sequence(spindexer.stopSpindexer(),kickup.stopKickup(),shooter.stopShoot(), shooter.hood0(), shooter.turret0());       
@@ -151,17 +152,9 @@ public class Move {
             //Commands.parallel(spindexer.forwardSpindexer(), hopper.agitate().alongWith(intake.intakeSuck())));
     }
     
-    public Command startWhileMoveShoot() {
-        
+    public Command startWhileMoveShoot() {   
         return Commands.parallel(Commands.repeatingSequence(shooter.whileMoveShoot(), shooter.whileMoveHood(), shooter.whileMoveTurret()),
                 Commands.waitUntil(shooter.isShooterAtVelocity).andThen(Commands.parallel(kickup.forwardKickup(), spindexer.forwardSpindexer())));
-
-        /*
-        return Commands.parallel(
-            Commands.repeatingSequence(shooter.whileMoveShoot(), shooter.whileMoveHood(), shooter.whileMoveTurret()),
-            Commands.waitUntil(shooter.isShooterAtVelocity).andThen(kickup.forwardKickup(), spindexer.forwardSpindexer(), hopper.agitate().alongWith(intake.intakeSuck()))
-        );
-        */
     }
 
     public Command turretClockWise45Degrees(){
@@ -208,7 +201,6 @@ public class Move {
     public Command stopIntake() {
         return Commands.parallel(intake.intakeStop());
     }
-
 
     //======================================================
     //========================Triggers======================
