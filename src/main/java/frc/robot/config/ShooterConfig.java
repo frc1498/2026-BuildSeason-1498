@@ -167,25 +167,25 @@ public class ShooterConfig {
 
         public void configureSpindexerMotor(TalonFXConfiguration spindexer){
         //configure motor
-        spindexer.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;  //Set 2-17-26
+        spindexer.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;  //Set 2-17-26
         spindexer.MotorOutput.NeutralMode = NeutralModeValue.Brake;  //Set 2-17-26
         spindexer.MotorOutput.PeakForwardDutyCycle = 1;
         spindexer.MotorOutput.PeakReverseDutyCycle = -1;
 
-        spindexer.CurrentLimits.StatorCurrentLimit = 120.0;
+        spindexer.CurrentLimits.StatorCurrentLimit = 180.0;
         spindexer.CurrentLimits.StatorCurrentLimitEnable = true;
-        spindexer.CurrentLimits.SupplyCurrentLimit = 40;    //Set 2-17-26
+        spindexer.CurrentLimits.SupplyCurrentLimit = 60;    //Set 2-17-26
         spindexer.CurrentLimits.SupplyCurrentLimitEnable = true;
-        spindexer.CurrentLimits.SupplyCurrentLowerLimit = 40.0;  //Set 2-17-26
+        spindexer.CurrentLimits.SupplyCurrentLowerLimit = 80.0;  //Set 2-17-26
         spindexer.CurrentLimits.SupplyCurrentLowerTime = 1;
 
         //Slot 0 Configs
-        spindexer.Slot0.kP = 0.5;  // An error of 1 rotation per second results in 2V output
+        spindexer.Slot0.kP = 0.6;  // An error of 1 rotation per second results in 2V output
         spindexer.Slot0.kI = 0;  // An error of 1 rotation per second increases output by 0.5V every second
         spindexer.Slot0.kD = 0;  // A change of 1 rotation per second squared results in 0.01 volts output
         spindexer.Slot0.kS = 0;
-        spindexer.Slot0.kV = 0.123076926;  // KV for a Kraken X60 is 490 rpm/V. 490/60 is 8.1667 rps/V.  The inverse is 0.122449 V/rps.
-        spindexer.Slot0.kA = .0266666;
+        spindexer.Slot0.kV = 0.143076926;  // KV for a Kraken X60 is 490 rpm/V. 490/60 is 8.1667 rps/V.  The inverse is 0.122449 V/rps.
+        spindexer.Slot0.kA = 0.0;
         spindexer.Slot0.kG = 0.0;
 
         spindexer.Voltage.PeakForwardVoltage = 11;

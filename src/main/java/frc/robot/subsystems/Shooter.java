@@ -612,7 +612,7 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
   }
 
   public Command startShootStatic(){
-    return run(() -> {this.setShooterVelocity(10);}).until(isShooterAtVelocity);  //Was 70
+    return run(() -> {this.setShooterVelocity(15);}).until(isShooterAtVelocity);  //Was 70
   }
 
   public Command startShootFast(){
