@@ -95,7 +95,7 @@ public class RobotContainer {
     public final Vision vision = new Vision(drivetrain, drivetrain::getStateCopy, drivetrain::addVisionMeasurement, MotorEnableConstants.TelemetryLevel.LIMITED);
 
     public ShooterConfig shooterConfig = new ShooterConfig();
-    public Shooter shooter = new Shooter(shooterConfig, drivetrain::getStateCopy, MotorEnableConstants.TelemetryLevel.LIMITED);
+    public Shooter shooter = new Shooter(shooterConfig, drivetrain::getStateCopy, MotorEnableConstants.TelemetryLevel.FULL);
     // Because I'm lazy, I'm leaving the configurations for the kickup and spindexer motors in the shooter config.
     // We'll just pass the shooter config into the kickup and spindexer subsystems to use the already in-place configurations.
     public Kickup kickup = new Kickup(shooterConfig, MotorEnableConstants.TelemetryLevel.LIMITED);
@@ -236,6 +236,10 @@ public class RobotContainer {
             Commands.parallel(setShootOnMoveSpeed(),move.startWhileMoveShoot())))
             .onFalse(Commands.sequence(setNormalMoveSpeed(),move.setTargetToAllianceHub(),move.stopShoot()));
 
+        drivetrain.aimAtHub.onTrue(move.setTargetToAllianceHub());
+        drivetrain.aimForPassLeft.onTrue(move.setTargetToAllianceCornerLeft());
+        drivetrain.aimForPassRight.onTrue(move.setTargetToAllianceCornerRight());
+        
         //Operator B button
         operator.b().whileTrue(Commands.sequence(move.setTargetToAllianceCornerRight(),
             Commands.parallel(setShootOnMoveSpeed(),move.startWhileMoveShoot())))
