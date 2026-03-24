@@ -193,8 +193,7 @@ public class RobotContainer {
         driver.leftBumper().onTrue(move.climbRetract());
         
         //Driver left trigger: Shoot
-        driver.leftTrigger(0.1).whileTrue(Commands.sequence(move.setTargetToAllianceHub()).
-        andThen(Commands.parallel(setShootOnMoveSpeed(),move.startWhileMoveShoot())))
+        driver.leftTrigger(0.1).whileTrue(Commands.parallel(setShootOnMoveSpeed(),move.startWhileMoveShoot()))
         .onFalse(Commands.parallel(setNormalMoveSpeed(),move.stopShoot()));
 
         //Driver back: Zero drivetrain
@@ -231,20 +230,24 @@ public class RobotContainer {
         //Operator POV Right
         //operator.povRight()
 
-        //Operator X button
-        operator.x().whileTrue(Commands.sequence(move.setTargetToAllianceCornerLeft(),
-            Commands.parallel(setShootOnMoveSpeed(),move.startWhileMoveShoot())))
-            .onFalse(Commands.sequence(setNormalMoveSpeed(),move.setTargetToAllianceHub(),move.stopShoot()));
-
+        // These automatic triggers take the place of the operator buttons for the left passing shot and right passing shot.
         drivetrain.aimAtHub.onTrue(move.setTargetToAllianceHub());
         drivetrain.aimForPassLeft.onTrue(move.setTargetToAllianceCornerLeft());
         drivetrain.aimForPassRight.onTrue(move.setTargetToAllianceCornerRight());
-        
+
+        //Operator X button
+        /*
+        operator.x().whileTrue(Commands.sequence(move.setTargetToAllianceCornerLeft(),
+            Commands.parallel(setShootOnMoveSpeed(),move.startWhileMoveShoot())))
+            .onFalse(Commands.sequence(setNormalMoveSpeed(),move.setTargetToAllianceHub(),move.stopShoot()));
+        */
+
         //Operator B button
+        /*
         operator.b().whileTrue(Commands.sequence(move.setTargetToAllianceCornerRight(),
             Commands.parallel(setShootOnMoveSpeed(),move.startWhileMoveShoot())))
             .onFalse(Commands.sequence(setNormalMoveSpeed(),move.setTargetToAllianceHub(),move.stopShoot()));
-        
+        */
 
         //Operator A button
         //operator.a()
