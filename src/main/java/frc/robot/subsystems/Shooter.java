@@ -28,6 +28,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -211,8 +212,8 @@ public Shooter(ShooterConfig config, Supplier<SwerveDriveState> swerveDriveState
     );
 
   // Publish subsystem data to SmartDashboard.
-  //SmartDashboard.putData("Shooter", this);
-  //SmartDashboard.putData("Shooter/Pose", this.targetingField);
+  SmartDashboard.putData("Shooter", this);
+  SmartDashboard.putData("Shooter/Pose", this.targetingField);
   //SmartDashboard.putData("Shooter/Sim", this.sim.getVis());
 
   //turretZeroed = true;
@@ -751,7 +752,6 @@ public void configureMechanism(TalonFX mechanism, TalonFXConfiguration config) {
         builder.addBooleanProperty("Tuning Shot Successful", () -> {return this.tuningShotSuccessful;}, this::setTuningShotSuccessful);
         builder.addDoubleProperty("Distance to Target", () -> {return this.distanceToTarget;}, null);
         builder.addDoubleProperty("Distance to Virtual Target", () -> {return this.distanceToVirtualTarget;}, null);
-        builder.addStringProperty("Alliance:", () -> {return DriverStation.getAlliance().get().toString();},null );
         builder.addStringProperty("Target", () -> {return targetLocation.toString();}, null);
       case LIMITED:
         builder.addStringProperty("Command", this::getCurrentCommandName, null);
